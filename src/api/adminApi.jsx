@@ -58,8 +58,29 @@ export const getUsers = async (status = 'all') => {
   return response.data;
 };
 
-export const banUser = async (userId) => {
-  const response = await api.put(`/admin/users/${userId}/ban`);
+export const getUserDetails = async (userId) => {
+  console.log('getUserDetails called with userId:', userId);
+  const response = await api.get(`/admin/users/${userId}`);
+  return response.data;
+};
+
+export const banUser = async (userId, data) => {
+  const response = await api.put(`/admin/users/${userId}/ban`, data);
+  return response.data;
+};
+
+export const suspendUser = async (userId, data) => {
+  const response = await api.put(`/admin/users/${userId}/suspend`, data);
+  return response.data;
+};
+
+export const warnUser = async (userId, data) => {
+  const response = await api.put(`/admin/users/${userId}/warn`, data);
+  return response.data;
+};
+
+export const restoreUser = async (userId) => {
+  const response = await api.put(`/admin/users/${userId}/restore`);
   return response.data;
 };
 

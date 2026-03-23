@@ -7,21 +7,23 @@
   position: sticky;
   top: 0;
   height: 100vh;
-  transition: all 0.3s ease;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 100;
+  overflow-x: hidden;
 }
 
 .admin-sidebar.collapsed {
-  width: 80px;
+  width: 72px;
 }
 
+/* Header */
 .sidebar-header {
-  padding: 24px 20px;
+  padding: 24px 16px;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  position: relative;
+  min-height: 80px;
 }
 
 .sidebar-logo {
@@ -29,6 +31,7 @@
   align-items: center;
   gap: 12px;
   overflow: hidden;
+  white-space: nowrap;
 }
 
 .logo-icon {
@@ -43,18 +46,25 @@
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
-  white-space: nowrap;
   margin: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
+.admin-sidebar.collapsed .logo-text {
+  display: none;
+  opacity: 0;
+  width: 0;
+}
+
+/* Toggle Button */
 .sidebar-toggle {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 32px;
   border-radius: 8px;
   border: none;
   background: #f1f5f9;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -62,11 +72,16 @@
   flex-shrink: 0;
 }
 
+.admin-sidebar.collapsed .sidebar-toggle {
+  margin-left: 0;
+}
+
 .sidebar-toggle:hover {
   background: #e2e8f0;
   transform: scale(1.05);
 }
 
+/* Navigation */
 .sidebar-nav {
   flex: 1;
   padding: 20px 12px;
@@ -79,7 +94,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 12px;
   background: none;
   border: none;
   border-radius: 12px;
@@ -91,6 +106,7 @@
   width: 100%;
   text-align: left;
   white-space: nowrap;
+  overflow: hidden;
 }
 
 .admin-sidebar.collapsed .sidebar-item {
@@ -101,10 +117,19 @@
 .sidebar-icon {
   font-size: 20px;
   flex-shrink: 0;
+  min-width: 24px;
+  text-align: center;
 }
 
 .sidebar-label {
   flex: 1;
+  transition: opacity 0.2s ease;
+}
+
+.admin-sidebar.collapsed .sidebar-label {
+  display: none;
+  width: 0;
+  opacity: 0;
 }
 
 .sidebar-item:hover {
@@ -117,9 +142,10 @@
   color: white;
 }
 
+/* Logout Button */
 .sidebar-logout {
   margin: 16px;
-  padding: 12px 16px;
+  padding: 12px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -132,6 +158,7 @@
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
+  overflow: hidden;
 }
 
 .admin-sidebar.collapsed .sidebar-logout {
@@ -142,10 +169,19 @@
 .logout-icon {
   font-size: 20px;
   flex-shrink: 0;
+  min-width: 24px;
+  text-align: center;
 }
 
 .logout-text {
   flex: 1;
+  transition: opacity 0.2s ease;
+}
+
+.admin-sidebar.collapsed .logout-text {
+  display: none;
+  width: 0;
+  opacity: 0;
 }
 
 .sidebar-logout:hover {
@@ -156,8 +192,8 @@
 .admin-sidebar.collapsed .sidebar-item:hover::after,
 .admin-sidebar.collapsed .sidebar-logout:hover::after {
   content: attr(title);
-  position: absolute;
-  left: 90px;
+  position: fixed;
+  left: 88px;
   background: #1e293b;
   color: white;
   padding: 6px 12px;
@@ -167,6 +203,7 @@
   z-index: 1000;
   pointer-events: none;
   animation: fadeIn 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 @keyframes fadeIn {
