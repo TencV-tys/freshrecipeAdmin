@@ -1,25 +1,24 @@
 .admin-sidebar {
   width: 280px;
-  background: white;
-  border-right: 1px solid #e2e8f0;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   position: sticky;
   top: 0;
   height: 100vh;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.3s ease, background 0.3s ease;
   z-index: 100;
   overflow-x: hidden;
 }
 
 .admin-sidebar.collapsed {
-  width: 72px;
+  width: 80px;
 }
 
-/* Header */
 .sidebar-header {
-  padding: 24px 16px;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 24px 20px;
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -47,41 +46,29 @@
   -webkit-background-clip: text;
   color: transparent;
   margin: 0;
-  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.admin-sidebar.collapsed .logo-text {
-  display: none;
-  opacity: 0;
-  width: 0;
-}
-
-/* Toggle Button */
 .sidebar-toggle {
   width: 36px;
   height: 32px;
   border-radius: 8px;
-  border: none;
-  background: #f1f5f9;
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
   cursor: pointer;
-  font-size: 18px;
+  font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
   flex-shrink: 0;
-}
-
-.admin-sidebar.collapsed .sidebar-toggle {
-  margin-left: 0;
+  color: var(--text-secondary);
 }
 
 .sidebar-toggle:hover {
-  background: #e2e8f0;
+  background: var(--hover-bg);
   transform: scale(1.05);
 }
 
-/* Navigation */
 .sidebar-nav {
   flex: 1;
   padding: 20px 12px;
@@ -94,13 +81,13 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
+  padding: 12px 16px;
   background: none;
   border: none;
   border-radius: 12px;
   font-size: 14px;
   font-weight: 500;
-  color: #475569;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
   width: 100%;
@@ -109,32 +96,9 @@
   overflow: hidden;
 }
 
-.admin-sidebar.collapsed .sidebar-item {
-  justify-content: center;
-  padding: 12px;
-}
-
-.sidebar-icon {
-  font-size: 20px;
-  flex-shrink: 0;
-  min-width: 24px;
-  text-align: center;
-}
-
-.sidebar-label {
-  flex: 1;
-  transition: opacity 0.2s ease;
-}
-
-.admin-sidebar.collapsed .sidebar-label {
-  display: none;
-  width: 0;
-  opacity: 0;
-}
-
 .sidebar-item:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--hover-bg);
+  color: var(--text-primary);
 }
 
 .sidebar-item.active {
@@ -142,14 +106,25 @@
   color: white;
 }
 
-/* Logout Button */
+/* Footer Section with Theme Toggle and Logout */
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-sidebar.collapsed .sidebar-footer {
+  align-items: center;
+}
+
 .sidebar-logout {
-  margin: 16px;
-  padding: 12px;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #f1f5f9;
+  background: var(--bg-tertiary);
   border: none;
   border-radius: 12px;
   font-size: 14px;
@@ -159,6 +134,7 @@
   transition: all 0.2s;
   white-space: nowrap;
   overflow: hidden;
+  width: 100%;
 }
 
 .admin-sidebar.collapsed .sidebar-logout {
@@ -166,53 +142,15 @@
   padding: 12px;
 }
 
-.logout-icon {
-  font-size: 20px;
-  flex-shrink: 0;
-  min-width: 24px;
-  text-align: center;
-}
-
-.logout-text {
-  flex: 1;
-  transition: opacity 0.2s ease;
-}
-
-.admin-sidebar.collapsed .logout-text {
-  display: none;
-  width: 0;
-  opacity: 0;
-}
-
 .sidebar-logout:hover {
   background: #fee2e2;
 }
 
-/* Tooltip for collapsed mode */
-.admin-sidebar.collapsed .sidebar-item:hover::after,
-.admin-sidebar.collapsed .sidebar-logout:hover::after {
-  content: attr(title);
-  position: fixed;
-  left: 88px;
-  background: #1e293b;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  white-space: nowrap;
-  z-index: 1000;
-  pointer-events: none;
-  animation: fadeIn 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+.logout-icon {
+  font-size: 20px;
+  flex-shrink: 0;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateX(-5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+.logout-text {
+  flex: 1;
 }

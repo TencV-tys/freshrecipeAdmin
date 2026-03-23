@@ -21,7 +21,6 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
 
-  // Reset form function using useCallback
   const resetForm = useCallback(() => {
     if (recipe) {
       setFormData({
@@ -57,15 +56,12 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
     setInstructionInput('');
   }, [recipe]);
 
-  // Reset form when dialog opens - this is intentional for form initialization
   useEffect(() => {
     if (open) {
       resetForm();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]); // resetForm is intentionally omitted to avoid re-runs
+  }, [open, resetForm]);
 
-  // Clean up image preview
   useEffect(() => {
     return () => {
       if (imagePreview && imagePreview.startsWith('blob:')) {
@@ -150,8 +146,9 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
 
-        <form onSubmit={handleSubmit} className="modal-form">
-          <div className="modal-body">
+        {/* Scrollable content area */}
+        <div className="modal-body">
+          <form onSubmit={handleSubmit}>
             {/* Basic Info Section */}
             <div className="form-section">
               <div className="section-title">
@@ -345,13 +342,16 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
                 ))}
               </div>
             </div>
-          </div>
+          </form>
+        </div>
 
-          <div className="modal-footer">
-            <button type="button" onClick={onClose} className="cancel-btn">Cancel</button>
-            <button type="submit" className="submit-btn">{recipe ? 'Update Recipe' : 'Create Recipe'}</button>
-          </div>
-        </form>
+        {/* Footer outside the scrollable area */}
+        <div className="modal-footer">
+          <button type="button" onClick={onClose} className="cancel-btn">Cancel</button>
+          <button type="submit" className="submit-btn" onClick={handleSubmit}>
+            {recipe ? 'Update Recipe' : 'Create Recipe'}
+          </button>
+        </div>
       </div>
     </div>
   );

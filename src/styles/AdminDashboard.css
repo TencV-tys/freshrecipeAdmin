@@ -1,5 +1,7 @@
 .admin-dashboard {
   padding: 32px;
+  background: var(--bg-secondary);
+  min-height: 100vh;
 }
 
 .dashboard-header {
@@ -9,12 +11,12 @@
 .dashboard-header h1 {
   font-size: 28px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
 .dashboard-header p {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .dashboard-stats {
@@ -25,17 +27,18 @@
 }
 
 .dashboard-section {
-  background: white;
+  background: var(--card-bg);
   border-radius: 24px;
   padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
 }
 
 .dashboard-section h2 {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 16px;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .recipe-list {
@@ -49,13 +52,14 @@
   align-items: center;
   gap: 16px;
   padding: 12px;
-  background: #f8fafc;
+  background: var(--bg-secondary);
   border-radius: 12px;
   transition: all 0.2s;
+  cursor: pointer;
 }
 
 .recipe-item:hover {
-  background: #f1f5f9;
+  background: var(--hover-bg);
   transform: translateX(4px);
 }
 
@@ -69,13 +73,13 @@
 .recipe-item h3 {
   font-size: 16px;
   font-weight: 500;
-  color: #0f172a;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
 .recipe-item p {
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .dashboard-loading {
@@ -83,12 +87,13 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
+  background: var(--bg-secondary);
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid #e2e8f0;
+  border: 3px solid var(--border-color);
   border-top-color: #ff6b6b;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;

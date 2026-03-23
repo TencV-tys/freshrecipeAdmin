@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import ThemeToggle from './ThemeToggle';
 import './AdminSidebar.css';
 
 const AdminSidebar = ({ collapsed, onToggle }) => {
@@ -47,10 +48,16 @@ const AdminSidebar = ({ collapsed, onToggle }) => {
         ))}
       </nav>
 
-      <button className="sidebar-logout" onClick={handleLogout} title={collapsed ? 'Logout' : ''}>
-        <span className="logout-icon">🚪</span>
-        {!collapsed && <span className="logout-text">Logout</span>}
-      </button>
+      {/* Theme Toggle at the bottom */}
+      <div className="sidebar-footer">
+        <div className="theme-toggle-wrapper">
+          <ThemeToggle />
+        </div>
+        <button className="sidebar-logout" onClick={handleLogout} title={collapsed ? 'Logout' : ''}>
+          <span className="logout-icon">🚪</span>
+          {!collapsed && <span className="logout-text">Logout</span>}
+        </button>
+      </div>
     </aside>
   );
 };

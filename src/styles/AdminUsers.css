@@ -1,4 +1,9 @@
 .admin-users {
+  min-height: 100vh;
+  background: var(--bg-secondary);
+}
+
+.users-main {
   padding: 32px;
 }
 
@@ -9,12 +14,12 @@
 .users-header h1 {
   font-size: 28px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
 .users-header p {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .users-controls {
@@ -28,10 +33,16 @@
 
 .users-search input {
   padding: 10px 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   width: 280px;
   font-size: 14px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+}
+
+.users-search input::placeholder {
+  color: var(--text-muted);
 }
 
 .users-filters {
@@ -41,12 +52,13 @@
 
 .users-filters button {
   padding: 8px 16px;
-  border: 1px solid #e2e8f0;
-  background: white;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s;
+  color: var(--text-secondary);
 }
 
 .users-filters button.active {
@@ -56,10 +68,11 @@
 }
 
 .users-table-container {
-  background: white;
+  background: var(--card-bg);
   border-radius: 24px;
   overflow-x: auto;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
 }
 
 .users-table {
@@ -70,88 +83,16 @@
 .users-table th {
   text-align: left;
   padding: 16px 20px;
-  background: #f8fafc;
+  background: var(--table-header-bg);
   font-weight: 600;
-  color: #1e293b;
-  border-bottom: 1px solid #e2e8f0;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .users-table td {
   padding: 16px 20px;
-  border-bottom: 1px solid #f1f5f9;
-  color: #334155;
-}
-
-.user-cell {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.user-avatar {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 600;
-}
-
-.user-status {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.user-status.active {
-  background: #d1fae5;
-  color: #10b981;
-}
-
-.user-status.banned {
-  background: #fee2e2;
-  color: #ef4444;
-}
-
-.user-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.user-actions button {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.btn-ban {
-  background: #fee2e2;
-  color: #ef4444;
-}
-
-.btn-unban {
-  background: #d1fae5;
-  color: #10b981;
-}
-
-.btn-delete {
-  background: #fef3c7;
-  color: #f59e0b;
-}
-
-.users-loading {
-  text-align: center;
-  padding: 48px;
-  color: #64748b;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
 }
 
 .clickable-row {
@@ -160,36 +101,7 @@
 }
 
 .clickable-row:hover {
-  background: #f1f5f9;
-}
-
-.view-btn {
-  padding: 6px 12px;
-  background: #f1f5f9;
-  border: none;
-  border-radius: 6px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.view-btn:hover {
-  background: #e2e8f0;
-}
-
-.user-status.active {
-  background: #d1fae5;
-  color: #10b981;
-}
-
-.user-status.suspended {
-  background: #fef3c7;
-  color: #f59e0b;
-}
-
-.user-status.banned {
-  background: #fee2e2;
-  color: #ef4444;
+  background: var(--table-row-hover);
 }
 
 .user-cell {
@@ -224,29 +136,6 @@
   font-size: 14px;
 }
 
-.clickable-row {
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.clickable-row:hover {
-  background: #f1f5f9;
-}
-
-.view-btn {
-  padding: 6px 12px;
-  background: #f1f5f9;
-  border: none;
-  border-radius: 6px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.view-btn:hover {
-  background: #e2e8f0;
-}
-
 .user-status {
   display: inline-block;
   padding: 4px 12px;
@@ -270,22 +159,24 @@
   color: #ef4444;
 }
 
-.users-table {
-  width: 100%;
-  border-collapse: collapse;
+.view-btn {
+  padding: 6px 12px;
+  background: var(--bg-tertiary);
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-secondary);
 }
 
-.users-table th {
-  text-align: left;
-  padding: 16px 20px;
-  background: #f8fafc;
-  font-weight: 600;
-  color: #1e293b;
-  border-bottom: 1px solid #e2e8f0;
+.view-btn:hover {
+  background: var(--border-color);
+  color: var(--text-primary);
 }
 
-.users-table td {
-  padding: 16px 20px;
-  border-bottom: 1px solid #f1f5f9;
-  color: #334155;
+.users-loading {
+  text-align: center;
+  padding: 48px;
+  color: var(--text-muted);
 }
