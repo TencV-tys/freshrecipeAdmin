@@ -1,22 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Box,
-  IconButton,
-  Typography
-} from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import React, { useState, useEffect, useCallback } from 'react';
+import { API_URL } from '../api/adminApi';
+import './RecipeFormDialog.css';
 
 const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
   const [formData, setFormData] = useState({
@@ -37,7 +21,8 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
 
-  useEffect(() => {
+  // Reset form function using useCallback
+  const resetForm = useCallback(() => {
     if (recipe) {
       setFormData({
         title: recipe.title || '',
@@ -51,7 +36,7 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
         ingredients: recipe.ingredients || [],
         instructions: recipe.instructions || []
       });
-      setImagePreview(recipe.image ? `http://localhost:5000${recipe.image}` : '');
+      setImagePreview(recipe.image ? `${API_URL.replace('/api', '')}${recipe.image}` : '');
     } else {
       setFormData({
         title: '',
@@ -68,7 +53,26 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
       setImagePreview('');
     }
     setImageFile(null);
-  }, [recipe, open]);
+    setIngredientInput({ name: '', quantity: '', unit: '' });
+    setInstructionInput('');
+  }, [recipe]);
+
+  // Reset form when dialog opens - this is intentional for form initialization
+  useEffect(() => {
+    if (open) {
+      resetForm();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]); // resetForm is intentionally omitted to avoid re-runs
+
+  // Clean up image preview
+  useEffect(() => {
+    return () => {
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -136,102 +140,220 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
     onSave(recipeData, imageFile);
   };
 
+  if (!open) return null;
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle sx={{ m: 0, p: 2 }}>
-        {recipe ? 'Edit Recipe' : 'Add New Recipe'}
-        <IconButton onClick={onClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <form onSubmit={handleSubmit}>
-        <DialogContent dividers>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField fullWidth label="Recipe Title" name="title" value={formData.title} onChange={handleChange} required />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField fullWidth label="Description" name="description" value={formData.description} onChange={handleChange} multiline rows={3} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Meal Type</InputLabel>
-                <Select name="mealType" value={formData.mealType} onChange={handleChange} label="Meal Type" required>
-                  <MenuItem value="Breakfast">Breakfast</MenuItem>
-                  <MenuItem value="Lunch">Lunch</MenuItem>
-                  <MenuItem value="Dinner">Dinner</MenuItem>
-                  <MenuItem value="Snack">Snack</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Difficulty</InputLabel>
-                <Select name="difficulty" value={formData.difficulty} onChange={handleChange} label="Difficulty" required>
-                  <MenuItem value="Easy">Easy</MenuItem>
-                  <MenuItem value="Medium">Medium</MenuItem>
-                  <MenuItem value="Hard">Hard</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField fullWidth label="Prep Time (minutes)" name="prepTime" type="number" value={formData.prepTime} onChange={handleChange} />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField fullWidth label="Cook Time (minutes)" name="cookTime" type="number" value={formData.cookTime} onChange={handleChange} />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField fullWidth label="Servings" name="servings" type="number" value={formData.servings} onChange={handleChange} />
-            </Grid>
-            <Grid item xs={12}>
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2">Recipe Image</Typography>
-                <input accept="image/*" style={{ display: 'none' }} id="recipe-image-upload" type="file" onChange={handleImageChange} />
-                <label htmlFor="recipe-image-upload">
-                  <Button variant="outlined" component="span" startIcon={<AddPhotoAlternateIcon />}>Upload Image</Button>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>{recipe ? 'Edit Recipe' : 'Create New Recipe'}</h2>
+          <button className="close-btn" onClick={onClose}>×</button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="modal-form">
+          <div className="modal-body">
+            {/* Basic Info Section */}
+            <div className="form-section">
+              <div className="section-title">
+                <span>📝</span>
+                <h3>Basic Information</h3>
+              </div>
+              
+              <div className="form-grid">
+                <div className="form-group full-width">
+                  <label>Recipe Title *</label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleChange}
+                    placeholder="e.g., Chicken Adobo"
+                    required
+                  />
+                </div>
+                
+                <div className="form-group full-width">
+                  <label>Description</label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    rows="3"
+                    placeholder="Describe your recipe..."
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Meal Type *</label>
+                  <select name="mealType" value={formData.mealType} onChange={handleChange} required>
+                    <option value="">Select meal type</option>
+                    <option value="Breakfast">Breakfast</option>
+                    <option value="Lunch">Lunch</option>
+                    <option value="Dinner">Dinner</option>
+                    <option value="Snack">Snack</option>
+                  </select>
+                </div>
+                
+                <div className="form-group">
+                  <label>Difficulty *</label>
+                  <select name="difficulty" value={formData.difficulty} onChange={handleChange} required>
+                    <option value="">Select difficulty</option>
+                    <option value="Easy">Easy</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Hard">Hard</option>
+                  </select>
+                </div>
+                
+                <div className="form-group">
+                  <label>Prep Time (minutes)</label>
+                  <input
+                    type="number"
+                    name="prepTime"
+                    value={formData.prepTime}
+                    onChange={handleChange}
+                    placeholder="e.g., 15"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Cook Time (minutes)</label>
+                  <input
+                    type="number"
+                    name="cookTime"
+                    value={formData.cookTime}
+                    onChange={handleChange}
+                    placeholder="e.g., 30"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Servings</label>
+                  <input
+                    type="number"
+                    name="servings"
+                    value={formData.servings}
+                    onChange={handleChange}
+                    placeholder="e.g., 4"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Categories (comma separated)</label>
+                  <input
+                    type="text"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    placeholder="e.g., Filipino, Main Dish, Chicken"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Image Upload Section */}
+            <div className="form-section">
+              <div className="section-title">
+                <span>🖼️</span>
+                <h3>Recipe Image</h3>
+              </div>
+              
+              <div className="image-upload-area">
+                <input
+                  type="file"
+                  id="recipe-image"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  style={{ display: 'none' }}
+                />
+                <label htmlFor="recipe-image" className="upload-label">
+                  <span>📸</span>
+                  <p>Click to upload image</p>
+                  <small>PNG, JPG up to 5MB</small>
                 </label>
-                {imagePreview && <Box sx={{ mt: 2 }}><img src={imagePreview} alt="Preview" style={{ maxWidth: '100%', maxHeight: '200px' }} /></Box>}
-              </Box>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField fullWidth label="Categories (comma separated)" name="category" value={formData.category} onChange={handleChange} />
-            </Grid>
-            <Grid item xs={12}>
-              <Typography variant="h6">Ingredients</Typography>
-              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                <TextField size="small" placeholder="Ingredient name" value={ingredientInput.name} onChange={(e) => setIngredientInput({ ...ingredientInput, name: e.target.value })} sx={{ flex: 2 }} />
-                <TextField size="small" placeholder="Quantity" value={ingredientInput.quantity} onChange={(e) => setIngredientInput({ ...ingredientInput, quantity: e.target.value })} sx={{ flex: 1 }} />
-                <TextField size="small" placeholder="Unit" value={ingredientInput.unit} onChange={(e) => setIngredientInput({ ...ingredientInput, unit: e.target.value })} sx={{ flex: 1 }} />
-                <Button variant="contained" onClick={handleAddIngredient}>Add</Button>
-              </Box>
-              {formData.ingredients.map((ing, idx) => (
-                <Box key={idx} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                  <Typography variant="body2">{ing.quantity} {ing.unit} {ing.name}</Typography>
-                  <IconButton size="small" onClick={() => handleRemoveIngredient(idx)}><CloseIcon fontSize="small" /></IconButton>
-                </Box>
-              ))}
-            </Grid>
-            <Grid item xs={12}>
-              <Typography variant="h6">Instructions</Typography>
-              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                <TextField fullWidth size="small" placeholder="Instruction step" value={instructionInput} onChange={(e) => setInstructionInput(e.target.value)} />
-                <Button variant="contained" onClick={handleAddInstruction}>Add</Button>
-              </Box>
-              {formData.instructions.map((inst, idx) => (
-                <Box key={idx} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                  <Typography variant="body2"><strong>Step {inst.step}:</strong> {inst.text}</Typography>
-                  <IconButton size="small" onClick={() => handleRemoveInstruction(idx)}><CloseIcon fontSize="small" /></IconButton>
-                </Box>
-              ))}
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="contained" color="primary">{recipe ? 'Update' : 'Create'}</Button>
-        </DialogActions>
-      </form>
-    </Dialog>
+                {imagePreview && (
+                  <div className="image-preview">
+                    <img src={imagePreview} alt="Preview" />
+                    <button type="button" onClick={() => setImagePreview('')} className="remove-image">×</button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Ingredients Section */}
+            <div className="form-section">
+              <div className="section-title">
+                <span>🥬</span>
+                <h3>Ingredients</h3>
+              </div>
+              
+              <div className="ingredient-input-group">
+                <input
+                  type="text"
+                  placeholder="Ingredient name"
+                  value={ingredientInput.name}
+                  onChange={(e) => setIngredientInput({ ...ingredientInput, name: e.target.value })}
+                />
+                <input
+                  type="text"
+                  placeholder="Quantity"
+                  value={ingredientInput.quantity}
+                  onChange={(e) => setIngredientInput({ ...ingredientInput, quantity: e.target.value })}
+                />
+                <input
+                  type="text"
+                  placeholder="Unit"
+                  value={ingredientInput.unit}
+                  onChange={(e) => setIngredientInput({ ...ingredientInput, unit: e.target.value })}
+                />
+                <button type="button" onClick={handleAddIngredient} className="add-btn">Add</button>
+              </div>
+              
+              <div className="ingredients-list">
+                {formData.ingredients.map((ing, idx) => (
+                  <div key={idx} className="ingredient-item">
+                    <span>{ing.quantity} {ing.unit} {ing.name}</span>
+                    <button type="button" onClick={() => handleRemoveIngredient(idx)} className="remove-btn">×</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Instructions Section */}
+            <div className="form-section">
+              <div className="section-title">
+                <span>👨‍🍳</span>
+                <h3>Instructions</h3>
+              </div>
+              
+              <div className="instruction-input-group">
+                <input
+                  type="text"
+                  placeholder="Instruction step"
+                  value={instructionInput}
+                  onChange={(e) => setInstructionInput(e.target.value)}
+                />
+                <button type="button" onClick={handleAddInstruction} className="add-btn">Add Step</button>
+              </div>
+              
+              <div className="instructions-list">
+                {formData.instructions.map((inst, idx) => (
+                  <div key={idx} className="instruction-item">
+                    <div className="step-number">{inst.step}</div>
+                    <div className="step-text">{inst.text}</div>
+                    <button type="button" onClick={() => handleRemoveInstruction(idx)} className="remove-btn">×</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="modal-footer">
+            <button type="button" onClick={onClose} className="cancel-btn">Cancel</button>
+            <button type="submit" className="submit-btn">{recipe ? 'Update Recipe' : 'Create Recipe'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 };
 

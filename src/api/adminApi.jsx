@@ -2,84 +2,40 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-console.log('API_URL:', API_URL);
-
-const adminApi = axios.create({
+const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
 
-// Add request interceptor for debugging
-adminApi.interceptors.request.use(
-  (config) => {
-    console.log('=== REQUEST ===');
-    console.log('URL:', config.url);
-    console.log('Method:', config.method);
-    console.log('Data:', config.data);
-    console.log('Headers:', config.headers);
-    return config;
-  },
+api.interceptors.response.use(
+  (response) => response,
   (error) => {
-    console.error('Request Error:', error);
-    return Promise.reject(error);
-  }
-);
-
-// Response interceptor for debugging
-adminApi.interceptors.response.use(
-  (response) => {
-    console.log('=== RESPONSE ===');
-    console.log('Status:', response.status);
-    console.log('URL:', response.config.url);
-    console.log('Data:', response.data);
-    return response;
-  },
-  (error) => {
-    console.error('=== RESPONSE ERROR ===');
-    console.error('Status:', error.response?.status);
-    console.error('URL:', error.response?.config?.url);
-    console.error('Data:', error.response?.data);
-    console.error('Message:', error.message);
-    return Promise.reject(error);
-  }
-);
-
-// Admin Auth
-export const adminLogin = async (email, password) => {
-  console.log('adminLogin called with:', { email, password: '***' });
-  try {
-    const response = await adminApi.post('/auth/login', { email, password });
-    console.log('Login response received:', response.data);
-    
-    if (response.data.role !== 'admin') {
-      console.log('User is not admin, role:', response.data.role);
-      throw new Error('You do not have admin access');
+    if (error.response?.status === 401) {
+      localStorage.removeItem('adminUser');
+      window.location.href = '/login';
     }
-    
-    console.log('Saving user to localStorage');
-    localStorage.setItem('adminUser', JSON.stringify(response.data));
-    console.log('Login successful, returning data');
-    return response.data;
-  } catch (error) {
-    console.error('adminLogin error:', error);
-    throw error;
+    return Promise.reject(error);
   }
+);
+
+// Auth
+export const adminLogin = async (email, password) => {
+  const response = await api.post('/auth/login', { email, password });
+  if (response.data.role !== 'admin') throw new Error('Unauthorized');
+  localStorage.setItem('adminUser', JSON.stringify(response.data));
+  return response.data;
 };
 
 export const adminLogout = async () => {
-  console.log('adminLogout called');
-  await adminApi.post('/auth/logout');
+  await api.post('/auth/logout');
   localStorage.removeItem('adminUser');
 };
 
+// ✅ Add this function
 export const checkAdminAuth = async () => {
-  console.log('checkAdminAuth called');
   try {
-    const response = await adminApi.get('/users/profile');
-    console.log('Auth check response:', response.data);
+    const response = await api.get('/users/profile');
     if (response.data.role === 'admin') {
       localStorage.setItem('adminUser', JSON.stringify(response.data));
       return response.data;
@@ -91,43 +47,41 @@ export const checkAdminAuth = async () => {
   }
 };
 
-// Admin Stats
-export const getAdminStats = async () => {
-  console.log('getAdminStats called');
-  const response = await adminApi.get('/admin/stats');
+// Dashboard
+export const getStats = async () => {
+  const response = await api.get('/admin/stats');
   return response.data;
 };
 
-// Admin Users
-export const getAdminUsers = async (status = 'all') => {
-  console.log('getAdminUsers called with status:', status);
-  const response = await adminApi.get(`/admin/users?status=${status}`);
+// Users
+export const getUsers = async (status = 'all') => {
+  const response = await api.get(`/admin/users?status=${status}`);
   return response.data;
 };
 
-export const getAdminUserById = async (userId) => {
-  console.log('getAdminUserById called with userId:', userId);
-  const response = await adminApi.get(`/admin/users/${userId}`);
+export const banUser = async (userId) => {
+  const response = await api.put(`/admin/users/${userId}/ban`);
   return response.data;
 };
 
-export const deleteAdminUser = async (userId) => {
-  console.log('deleteAdminUser called with userId:', userId);
-  const response = await adminApi.delete(`/admin/users/${userId}`);
+export const unbanUser = async (userId) => {
+  const response = await api.put(`/admin/users/${userId}/unban`);
   return response.data;
 };
 
-// Admin Recipes
-export const getAdminRecipes = async () => {
-  console.log('getAdminRecipes called');
-  const response = await adminApi.get('/admin/recipes');
+export const deleteUser = async (userId) => {
+  const response = await api.delete(`/admin/users/${userId}`);
   return response.data;
 };
 
-export const createAdminRecipe = async (recipeData, imageFile) => {
-  console.log('createAdminRecipe called');
+// Recipes
+export const getRecipes = async () => {
+  const response = await api.get('/admin/recipes');
+  return response.data;
+};
+
+export const createRecipe = async (recipeData, imageFile) => {
   const formData = new FormData();
-  
   Object.keys(recipeData).forEach(key => {
     if (recipeData[key] !== undefined && recipeData[key] !== null) {
       if (Array.isArray(recipeData[key])) {
@@ -137,21 +91,15 @@ export const createAdminRecipe = async (recipeData, imageFile) => {
       }
     }
   });
-  
-  if (imageFile) {
-    formData.append('recipeImage', imageFile);
-  }
-  
-  const response = await adminApi.post('/admin/recipes', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
+  if (imageFile) formData.append('recipeImage', imageFile);
+  const response = await api.post('/admin/recipes', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
   });
   return response.data;
 };
 
-export const updateAdminRecipe = async (recipeId, recipeData, imageFile) => {
-  console.log('updateAdminRecipe called for recipeId:', recipeId);
+export const updateRecipe = async (id, recipeData, imageFile) => {
   const formData = new FormData();
-  
   Object.keys(recipeData).forEach(key => {
     if (recipeData[key] !== undefined && recipeData[key] !== null) {
       if (Array.isArray(recipeData[key])) {
@@ -161,21 +109,16 @@ export const updateAdminRecipe = async (recipeId, recipeData, imageFile) => {
       }
     }
   });
-  
-  if (imageFile) {
-    formData.append('recipeImage', imageFile);
-  }
-  
-  const response = await adminApi.put(`/admin/recipes/${recipeId}`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
+  if (imageFile) formData.append('recipeImage', imageFile);
+  const response = await api.put(`/admin/recipes/${id}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
   });
   return response.data;
 };
 
-export const deleteAdminRecipe = async (recipeId) => {
-  console.log('deleteAdminRecipe called for recipeId:', recipeId);
-  const response = await adminApi.delete(`/admin/recipes/${recipeId}`);
+export const deleteRecipe = async (id) => {
+  const response = await api.delete(`/admin/recipes/${id}`);
   return response.data;
 };
 
-export default adminApi;
+export default api;
