@@ -13,12 +13,29 @@ const theme = createTheme({
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  if (loading) return null;
-  if (!user || user.role !== 'admin') return <Navigate to="/login" />;
+  
+  console.log('ProtectedRoute - loading:', loading, 'user:', user);
+  
+  if (loading) {
+    console.log('Still loading, showing spinner');
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <div>Loading...</div>
+      </div>
+    );
+  }
+  
+  if (!user || user.role !== 'admin') {
+    console.log('No user or not admin, redirecting to login');
+    return <Navigate to="/login" replace />;
+  }
+  
+  console.log('User is admin, showing protected content');
   return children;
 };
 
 function App() {
+  console.log('App rendering');
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -26,8 +43,15 @@ function App() {
         <Router>
           <Routes>
             <Route path="/login" element={<AdminLogin />} />
-            <Route path="/admin/*" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-            <Route path="/" element={<Navigate to="/admin" />} />
+            <Route 
+              path="/admin/*" 
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="/" element={<Navigate to="/admin" replace />} />
           </Routes>
         </Router>
       </AuthProvider>

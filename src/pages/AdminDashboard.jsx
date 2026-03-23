@@ -18,15 +18,6 @@ import {
   Chip,
   Paper,
   IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Avatar,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem
 } from '@mui/material';
 import { getAdminStats, getAdminUsers, getAdminRecipes, deleteAdminRecipe, createAdminRecipe, updateAdminRecipe } from '../api/adminApi';
 import AdminSidebar from '../components/AdminSidebar';
@@ -39,7 +30,7 @@ import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 
 const AdminDashboard = () => {
-  const { user, logout } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -57,24 +48,31 @@ const AdminDashboard = () => {
   });
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') {
+    console.log('AdminDashboard - authLoading:', authLoading, 'user:', user);
+    
+    if (!authLoading && (!user || user.role !== 'admin')) {
+      console.log('Not admin, redirecting to login');
       navigate('/login');
       return;
     }
-    fetchStats();
-  }, [user, navigate]);
+    
+    if (user && user.role === 'admin') {
+      console.log('Admin user confirmed, fetching stats');
+      fetchStats();
+    }
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
-    if (activeTab === 'users') {
+    if (activeTab === 'users' && user) {
       fetchUsers();
     }
-  }, [activeTab]);
+  }, [activeTab, user]);
 
   useEffect(() => {
-    if (activeTab === 'recipes') {
+    if (activeTab === 'recipes' && user) {
       fetchRecipes();
     }
-  }, [activeTab]);
+  }, [activeTab, user]);
 
   const fetchStats = async () => {
     try {
@@ -204,18 +202,33 @@ const AdminDashboard = () => {
       case 'recipes':
         return (
           <>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}><Typography variant="h5" fontWeight="bold">Recipes</Typography><Button variant="contained" startIcon={<AddIcon />} onClick={handleAddRecipe}>Add Recipe</Button></Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+              <Typography variant="h5" fontWeight="bold">Recipes</Typography>
+              <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddRecipe}>Add Recipe</Button>
+            </Box>
             <Paper sx={{ p: 2 }}>
               <TableContainer>
                 <Table>
                   <TableHead>
-                    <TableRow><TableCell>Title</TableCell><TableCell>Meal Type</TableCell><TableCell>Difficulty</TableCell><TableCell>Views</TableCell><TableCell>Actions</TableCell></TableRow>
+                    <TableRow>
+                      <TableCell>Title</TableCell>
+                      <TableCell>Meal Type</TableCell>
+                      <TableCell>Difficulty</TableCell>
+                      <TableCell>Views</TableCell>
+                      <TableCell>Actions</TableCell>
+                    </TableRow>
                   </TableHead>
                   <TableBody>
                     {recipes.map(recipe => (
                       <TableRow key={recipe.id}>
-                        <TableCell>{recipe.title}</TableCell><TableCell>{recipe.mealType}</TableCell><TableCell>{recipe.difficulty}</TableCell><TableCell>{recipe.views}</TableCell>
-                        <TableCell><IconButton onClick={() => handleEditRecipe(recipe)}><EditIcon /></IconButton><IconButton color="error" onClick={() => handleDeleteRecipe(recipe.id)}><DeleteIcon /></IconButton></TableCell>
+                        <TableCell>{recipe.title}</TableCell>
+                        <TableCell>{recipe.mealType}</TableCell>
+                        <TableCell>{recipe.difficulty}</TableCell>
+                        <TableCell>{recipe.views}</TableCell>
+                        <TableCell>
+                          <IconButton onClick={() => handleEditRecipe(recipe)}><EditIcon /></IconButton>
+                          <IconButton color="error" onClick={() => handleDeleteRecipe(recipe.id)}><DeleteIcon /></IconButton>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -228,13 +241,31 @@ const AdminDashboard = () => {
     }
   };
 
-  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}><CircularProgress /></Box>;
+  if (authLoading || loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} drawerOpen={drawerOpen} onDrawerToggle={() => setDrawerOpen(!drawerOpen)} />
-      <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>{renderContent()}</Box>
-      <RecipeFormDialog open={recipeDialogOpen} onClose={() => setRecipeDialogOpen(false)} onSave={handleSaveRecipe} recipe={editingRecipe} />
+      <AdminSidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        drawerOpen={drawerOpen} 
+        onDrawerToggle={() => setDrawerOpen(!drawerOpen)} 
+      />
+      <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+        {renderContent()}
+      </Box>
+      <RecipeFormDialog 
+        open={recipeDialogOpen} 
+        onClose={() => setRecipeDialogOpen(false)} 
+        onSave={handleSaveRecipe} 
+        recipe={editingRecipe} 
+      />
     </Box>
   );
 };

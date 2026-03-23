@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import {
   Container,
   Box,
@@ -23,21 +24,58 @@ const AdminLogin = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { user, setUser, loading: authLoading } = useAuth();
+
+  // If already logged in, redirect to admin
+  useEffect(() => {
+    if (!authLoading && user && user.role === 'admin') {
+      console.log('Already logged in, redirecting to admin');
+      navigate('/admin', { replace: true });
+    }
+  }, [user, authLoading, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('=== LOGIN ATTEMPT ===');
+    console.log('Email:', email);
+    
     setError('');
     setLoading(true);
 
     try {
-      await adminLogin(email, password);
-      navigate('/admin');
+      const result = await adminLogin(email, password);
+      console.log('Login successful!', result);
+      
+      // Set user in context
+      setUser(result);
+      console.log('User set in context');
+      
+      // Small delay to ensure state updates
+      setTimeout(() => {
+        console.log('Navigating to /admin...');
+        navigate('/admin', { replace: true });
+      }, 100);
     } catch (error) {
-      setError(error.response?.data?.message || error.message || 'Login failed');
+      console.error('Login error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Login failed';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
+
+  // Don't show login if already authenticated
+  if (authLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (user && user.role === 'admin') {
+    return null; // Will redirect via useEffect
+  }
 
   return (
     <Container maxWidth="sm">
