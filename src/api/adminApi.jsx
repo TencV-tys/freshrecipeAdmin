@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -32,7 +32,6 @@ export const adminLogout = async () => {
   localStorage.removeItem('adminUser');
 };
 
-// ✅ Add this function
 export const checkAdminAuth = async () => {
   try {
     const response = await api.get('/users/profile');

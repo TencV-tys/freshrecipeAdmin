@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getAdminRecipes, deleteAdminRecipe, createAdminRecipe, updateAdminRecipe } from '../api/adminApi';
-import Sidebar from '../components/Sidebar';
+import { getRecipes, createRecipe, updateRecipe, deleteRecipe } from '../api/adminApi';
 import RecipeFormDialog from '../components/RecipeFormDialog';
-import styles from '../styles/AdminRecipes.module.css';
+import '../styles/AdminRecipes.css';
 
 const AdminRecipes = () => {
   const [recipes, setRecipes] = useState([]);
@@ -15,7 +14,7 @@ const AdminRecipes = () => {
   const fetchRecipes = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getAdminRecipes();
+      const data = await getRecipes();
       setRecipes(data);
     } catch (error) {
       console.error('Failed to fetch recipes:', error);
@@ -41,7 +40,7 @@ const AdminRecipes = () => {
   const handleDeleteRecipe = async (recipeId) => {
     if (window.confirm('Are you sure you want to delete this recipe?')) {
       try {
-        await deleteAdminRecipe(recipeId);
+        await deleteRecipe(recipeId);
         fetchRecipes();
       } catch (error) {
         console.error('Failed to delete recipe:', error);
@@ -53,9 +52,9 @@ const AdminRecipes = () => {
   const handleSaveRecipe = async (recipeData, imageFile) => {
     try {
       if (editingRecipe) {
-        await updateAdminRecipe(editingRecipe.id, recipeData, imageFile);
+        await updateRecipe(editingRecipe.id, recipeData, imageFile);
       } else {
-        await createAdminRecipe(recipeData, imageFile);
+        await createRecipe(recipeData, imageFile);
       }
       setRecipeDialogOpen(false);
       fetchRecipes();
@@ -74,74 +73,73 @@ const AdminRecipes = () => {
 
   const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
 
+  if (loading) {
+    return <div className="recipes-loading">Loading recipes...</div>;
+  }
+
   return (
-    <div className={styles.recipesPage}>
-      <Sidebar active="recipes" />
-      <main className={styles.main}>
-        <header className={styles.header}>
-          <h1>Recipes Management</h1>
-          <p>Create, edit and manage all recipes</p>
-        </header>
+    <div className="admin-recipes">
+      <header className="recipes-header">
+        <h1>Recipes Management</h1>
+        <p>Create, edit and manage all recipes</p>
+      </header>
 
-        <div className={styles.controls}>
-          <div className={styles.search}>
-            <input
-              type="text"
-              placeholder="Search recipes..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <div className={styles.filters}>
-            <select value={filterMealType} onChange={(e) => setFilterMealType(e.target.value)}>
-              <option value="all">All Meal Types</option>
-              {mealTypes.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-          </div>
-          <button className={styles.addButton} onClick={handleAddRecipe}>
-            + Add New Recipe
-          </button>
+      <div className="recipes-controls">
+        <div className="recipes-search">
+          <input
+            type="text"
+            placeholder="Search recipes..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
+        <div className="recipes-filters">
+          <select value={filterMealType} onChange={(e) => setFilterMealType(e.target.value)}>
+            <option value="all">All Meal Types</option>
+            {mealTypes.map(type => (
+              <option key={type} value={type}>{type}</option>
+            ))}
+          </select>
+        </div>
+        <button className="add-recipe-btn" onClick={handleAddRecipe}>
+          + Add New Recipe
+        </button>
+      </div>
 
-        {loading ? (
-          <div className={styles.loading}>Loading recipes...</div>
-        ) : filteredRecipes.length === 0 ? (
-          <div className={styles.emptyState}>
-            <span>🍽️</span>
-            <h3>No recipes found</h3>
-            <p>Click "Add New Recipe" to create your first recipe</p>
-          </div>
-        ) : (
-          <div className={styles.recipesGrid}>
-            {filteredRecipes.map(recipe => (
-              <div key={recipe.id} className={styles.recipeCard}>
-                <div className={styles.recipeImage}>
-                  {recipe.image ? (
-                    <img src={`http://localhost:5000${recipe.image}`} alt={recipe.title} />
-                  ) : (
-                    <div className={styles.imagePlaceholder}>🍳</div>
-                  )}
+      {filteredRecipes.length === 0 ? (
+        <div className="empty-state">
+          <span>🍽️</span>
+          <h3>No recipes found</h3>
+          <p>Click "Add New Recipe" to create your first recipe</p>
+        </div>
+      ) : (
+        <div className="recipes-grid">
+          {filteredRecipes.map(recipe => (
+            <div key={recipe.id} className="recipe-card">
+              <div className="recipe-image">
+                {recipe.image ? (
+                  <img src={`http://localhost:5000${recipe.image}`} alt={recipe.title} />
+                ) : (
+                  <div className="image-placeholder">🍳</div>
+                )}
+              </div>
+              <div className="recipe-content">
+                <h3>{recipe.title}</h3>
+                <div className="recipe-meta">
+                  <span className="meal-type">{recipe.mealType}</span>
+                  <span className="difficulty">{recipe.difficulty}</span>
+                  <span className="views">👁️ {recipe.views} views</span>
                 </div>
-                <div className={styles.recipeContent}>
-                  <h3>{recipe.title}</h3>
-                  <div className={styles.recipeMeta}>
-                    <span className={styles.mealType}>{recipe.mealType}</span>
-                    <span className={styles.difficulty}>{recipe.difficulty}</span>
-                    <span className={styles.views}>👁️ {recipe.views} views</span>
-                  </div>
-                  <p className={styles.description}>{recipe.description?.substring(0, 100)}...</p>
-                  <div className={styles.recipeActions}>
-                    <button className={styles.editBtn} onClick={() => handleEditRecipe(recipe)}>Edit</button>
-                    <button className={styles.deleteBtn} onClick={() => handleDeleteRecipe(recipe.id)}>Delete</button>
-                  </div>
+                <p className="recipe-description">{recipe.description?.substring(0, 100)}...</p>
+                <div className="recipe-actions">
+                  <button className="edit-btn" onClick={() => handleEditRecipe(recipe)}>Edit</button>
+                  <button className="delete-btn" onClick={() => handleDeleteRecipe(recipe.id)}>Delete</button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </main>
+            </div>
+          ))}
+        </div>
+      )}
 
       <RecipeFormDialog
         open={recipeDialogOpen}
