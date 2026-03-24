@@ -16,34 +16,47 @@ const UserModal = ({ user, onClose, onWarn, onBan, onSuspend, onRestore, onDelet
   const hasUploadedPhotos = user?.reportedImages?.length > 0 || user?.recipes?.length > 0 || user?.avatar;
 
   const handleWarn = () => {
-    if (!warningReason.trim()) {
-      alert('Please enter a reason for warning');
-      return;
-    }
-    if (window.confirm(`Send warning to ${user?.username}?`)) {
-      onWarn(warningReason);
-    }
-  };
+  console.log('⚠️ Warn button clicked for user:', user?.username);
+  if (!warningReason.trim()) {
+    console.log('❌ No warning reason provided');
+    alert('Please enter a reason for warning');
+    return;
+  }
+  console.log('📝 Warning reason:', warningReason);
+  if (window.confirm(`Send warning to ${user?.username}?`)) {
+    console.log('✅ Warning confirmed');
+    onWarn(warningReason);
+  }
+};
 
-  const handleBan = () => {
-    if (!banReason.trim()) {
-      alert('Please enter a reason for banning');
-      return;
-    }
-    if (window.confirm(`Permanently ban ${user?.username}?`)) {
-      onBan(banReason);
-    }
-  };
+const handleBan = () => {
+  console.log('🚫 Ban button clicked for user:', user?.username);
+  if (!banReason.trim()) {
+    console.log('❌ No ban reason provided');
+    alert('Please enter a reason for banning');
+    return;
+  }
+  console.log('📝 Ban reason:', banReason);
+  if (window.confirm(`Permanently ban ${user?.username}?`)) {
+    console.log('✅ Ban confirmed');
+    onBan(banReason);
+  } 
+};
 
-  const handleSuspend = () => {
-    if (!suspendReason.trim()) {
-      alert('Please enter a reason for suspension');
-      return;
-    }
-    if (window.confirm(`Suspend ${user?.username} for ${suspendDays} days?`)) {
-      onSuspend(suspendReason, suspendDays);
-    }
-  };
+const handleSuspend = () => {
+  console.log('⏰ Suspend button clicked for user:', user?.username);
+  if (!suspendReason.trim()) {
+    console.log('❌ No suspension reason provided');
+    alert('Please enter a reason for suspension');
+    return;
+  }
+  console.log('📝 Suspension reason:', suspendReason);
+  console.log('📆 Suspension days:', suspendDays);
+  if (window.confirm(`Suspend ${user?.username} for ${suspendDays} days?`)) {
+    console.log('✅ Suspension confirmed');
+    onSuspend(suspendReason, suspendDays);
+  }
+}; 
 
   const handleRestore = () => {
     if (window.confirm(`Restore ${user?.username}'s account?`)) {
@@ -226,7 +239,7 @@ const UserModal = ({ user, onClose, onWarn, onBan, onSuspend, onRestore, onDelet
                         onClick={handleSuspend} 
                         disabled={!hasUploadedPhotos || loading}
                       >
-                        Suspend Account
+                        Suspend Account 
                       </button>
                     </div>
                   </div>

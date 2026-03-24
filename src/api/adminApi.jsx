@@ -186,9 +186,9 @@ export const deleteRecipe = async (id) => {
   const response = await api.delete(`/admin/recipes/${recipeId}`);
   console.log('✅ Delete response:', response.data);
   return response.data;
-};
+}; 
 
-// Add this function
+// Add this function 
 export const getDashboardData = async () => {
   const response = await api.get('/admin/dashboard');
   return response.data;

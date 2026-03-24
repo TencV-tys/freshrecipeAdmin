@@ -7,9 +7,6 @@ import {
   Line,
   AreaChart,
   Area,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -57,27 +54,7 @@ const AdminDashboard = () => {
     recipes: week.newRecipes
   })) || [];
 
-  // Prepare data for recipe categories
-  const recipeCategoryData = [
-    { name: 'Breakfast', value: 0, color: '#ff6b6b' },
-    { name: 'Lunch', value: 0, color: '#4ecdc4' },
-    { name: 'Dinner', value: 0, color: '#f093fb' },
-    { name: 'Snack', value: 0, color: '#4facfe' }
-  ];
-
-  // Update category data from stats
-  stats.mostViewedRecipes?.forEach(recipe => {
-    if (recipe.mealType === 'Breakfast') recipeCategoryData[0].value++;
-    if (recipe.mealType === 'Lunch') recipeCategoryData[1].value++;
-    if (recipe.mealType === 'Dinner') recipeCategoryData[2].value++;
-    if (recipe.mealType === 'Snack') recipeCategoryData[3].value++;
-  });
-
-  const COLORS = ['#ff6b6b', '#4ecdc4', '#f093fb', '#4facfe'];
-
-  // Check if data is empty
   const hasChartData = userGrowthData.some(d => d.users > 0 || d.recipes > 0);
-  const hasCategoryData = recipeCategoryData.some(c => c.value > 0);
 
   const handleCardClick = (type) => {
     if (type === 'users') {
@@ -108,7 +85,7 @@ const AdminDashboard = () => {
         </div>
       </header>
 
-      {/* Stats Cards - Clickable */}
+      {/* Stats Cards */}
       <div className="dashboard-stats">
         <div onClick={() => handleCardClick('users')} style={{ cursor: 'pointer' }}>
           <StatsCard title="Total Users" value={stats.totalUsers} icon="👥" color="#667eea" />
@@ -122,7 +99,7 @@ const AdminDashboard = () => {
       {/* Charts Section */}
       <div className="charts-grid">
         {/* User Growth Chart */}
-        <div className="chart-card">
+        <div className="chart-card full-width">
           <h2>User Growth & Activity</h2>
           {!hasChartData ? (
             <div className="empty-chart">
@@ -159,48 +136,6 @@ const AdminDashboard = () => {
                 />
               </LineChart>
             </ResponsiveContainer>
-          )}
-        </div>
-
-        {/* Recipe Categories Pie Chart */}
-        <div className="chart-card">
-          <h2>Recipe Categories</h2>
-          {!hasCategoryData ? (
-            <div className="empty-chart">
-              <span>🥧</span>
-              <p>No recipe data yet</p>
-              <small>Add recipes to see category distribution</small>
-            </div>
-          ) : (
-            <>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={recipeCategoryData.filter(c => c.value > 0)}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {recipeCategoryData.filter(c => c.value > 0).map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[recipeCategoryData.findIndex(c => c.name === entry.name)]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="chart-stats">
-                {recipeCategoryData.map((category, idx) => (
-                  <div key={idx} className="chart-stat-item">
-                    <span className="stat-dot" style={{ backgroundColor: COLORS[idx] }}></span>
-                    <span>{category.name}: {category.value} recipes</span>
-                  </div>
-                ))}
-              </div>
-            </>
           )}
         </div>
 
