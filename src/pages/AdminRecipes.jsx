@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getRecipes, createRecipe, updateRecipe, deleteRecipe } from '../api/adminApi';
 import RecipeFormDialog from '../components/RecipeFormDialog';
+import RecipeViewModal from '../components/RecipeViewModal';
 import '../styles/AdminRecipes.css';
 
 const AdminRecipes = () => {
@@ -9,6 +10,7 @@ const AdminRecipes = () => {
   const [search, setSearch] = useState('');
   const [recipeDialogOpen, setRecipeDialogOpen] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState(null);
+  const [viewingRecipe, setViewingRecipe] = useState(null);
   const [filterMealType, setFilterMealType] = useState('all');
 
   const fetchRecipes = useCallback(async () => {
@@ -37,16 +39,18 @@ const AdminRecipes = () => {
 
   const handleEditRecipe = (recipe) => {
     console.log('✏️ Editing recipe:', recipe);
-    console.log('Recipe ID:', recipe.id);
-    console.log('Recipe _id:', recipe._id);
     setEditingRecipe(recipe);
     setRecipeDialogOpen(true);
+  };
+
+  const handleViewRecipe = (recipe) => {
+    console.log('👁️ Viewing recipe:', recipe);
+    setViewingRecipe(recipe);
   };
 
   const handleDeleteRecipe = async (recipe) => {
     console.log('🗑️ Delete button clicked for recipe:', recipe);
     const recipeId = recipe.id || recipe._id;
-    console.log('Recipe ID to delete:', recipeId);
     
     if (!recipeId) {
       console.error('❌ No recipe ID found!', recipe);
@@ -55,16 +59,13 @@ const AdminRecipes = () => {
     }
     
     if (window.confirm('Are you sure you want to delete this recipe?')) {
-      console.log('🗑️ Confirmed deletion for ID:', recipeId);
       try {
-        const result = await deleteRecipe(recipeId);
-        console.log('✅ Delete successful:', result);
+        await deleteRecipe(recipeId);
         alert('Recipe deleted successfully');
         fetchRecipes();
       } catch (error) {
         console.error('❌ Failed to delete recipe:', error);
-        console.error('Error details:', error.response?.data);
-        alert('Failed to delete recipe: ' + (error.response?.data?.message || error.message));
+        alert('Failed to delete recipe');
       }
     }
   };
@@ -75,29 +76,20 @@ const AdminRecipes = () => {
     try {
       if (editingRecipe) {
         const recipeId = editingRecipe.id || editingRecipe._id;
-        console.log('🔄 Updating recipe ID:', recipeId);
-        console.log('📦 Update data:', recipeData);
-        
         if (!recipeId) {
-          console.error('❌ No recipe ID found for update');
           alert('Recipe ID not found');
           return;
         }
-        
-        const result = await updateRecipe(recipeId, recipeData, imageFile);
-        console.log('✅ Update successful:', result);
+        await updateRecipe(recipeId, recipeData, imageFile);
         alert('Recipe updated successfully');
       } else {
-        console.log('➕ Creating new recipe');
-        const result = await createRecipe(recipeData, imageFile);
-        console.log('✅ Create successful:', result);
+        await createRecipe(recipeData, imageFile);
         alert('Recipe created successfully');
       }
       setRecipeDialogOpen(false);
       fetchRecipes();
     } catch (error) {
       console.error('❌ Failed to save recipe:', error);
-      console.error('Error response:', error.response?.data);
       alert(error.response?.data?.message || 'Failed to save recipe');
     }
   };
@@ -153,7 +145,11 @@ const AdminRecipes = () => {
       ) : (
         <div className="recipes-grid">
           {filteredRecipes.map((recipe, index) => (
-            <div key={recipe.id || recipe._id || index} className="recipe-card">
+            <div 
+              key={recipe.id || recipe._id || index} 
+              className="recipe-card clickable"
+              onClick={() => handleViewRecipe(recipe)}
+            >
               <div className="recipe-image">
                 {recipe.image ? (
                   <img src={`http://localhost:5000${recipe.image}`} alt={recipe.title} />
@@ -169,7 +165,7 @@ const AdminRecipes = () => {
                   <span className="views">👁️ {recipe.views} views</span>
                 </div>
                 <p className="recipe-description">{recipe.description?.substring(0, 100)}...</p>
-                <div className="recipe-actions">
+                <div className="recipe-actions" onClick={(e) => e.stopPropagation()}>
                   <button className="edit-btn" onClick={() => handleEditRecipe(recipe)}>Edit</button>
                   <button className="delete-btn" onClick={() => handleDeleteRecipe(recipe)}>Delete</button>
                 </div>
@@ -185,8 +181,13 @@ const AdminRecipes = () => {
         onSave={handleSaveRecipe}
         recipe={editingRecipe}
       />
+
+      <RecipeViewModal
+        recipe={viewingRecipe}
+        onClose={() => setViewingRecipe(null)}
+      />
     </div>
-  ); 
+  );
 };
 
 export default AdminRecipes;

@@ -350,3 +350,18 @@
     font-size: 12px;
   }
 }
+
+.recipe-card.clickable {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.recipe-card.clickable:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.recipe-actions {
+  position: relative;
+  z-index: 10;
+}
