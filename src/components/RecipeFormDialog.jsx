@@ -11,7 +11,6 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
     prepTime: '',
     cookTime: '',
     servings: '',
-    category: '',
     ingredients: [],
     instructions: []
   });
@@ -23,15 +22,20 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
 
   const resetForm = useCallback(() => {
     if (recipe) {
+      console.log('Resetting form with recipe:', recipe);
+      
+      const prepTimeVal = recipe.prepTime !== undefined && recipe.prepTime !== null ? recipe.prepTime.toString() : '';
+      const cookTimeVal = recipe.cookTime !== undefined && recipe.cookTime !== null ? recipe.cookTime.toString() : '';
+      const servingsVal = recipe.servings !== undefined && recipe.servings !== null ? recipe.servings.toString() : '';
+      
       setFormData({
         title: recipe.title || '',
         description: recipe.description || '',
         mealType: recipe.mealType || '',
         difficulty: recipe.difficulty || '',
-        prepTime: recipe.prepTime || '',
-        cookTime: recipe.cookTime || '',
-        servings: recipe.servings || '',
-        category: recipe.category?.join(', ') || '',
+        prepTime: prepTimeVal,
+        cookTime: cookTimeVal,
+        servings: servingsVal,
         ingredients: recipe.ingredients || [],
         instructions: recipe.instructions || []
       });
@@ -45,7 +49,6 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
         prepTime: '',
         cookTime: '',
         servings: '',
-        category: '',
         ingredients: [],
         instructions: []
       });
@@ -58,9 +61,12 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
 
   useEffect(() => {
     if (open) {
+      console.log('RecipeFormDialog opened with recipe:', recipe);
+      console.log('Recipe prepTime:', recipe?.prepTime);
+      console.log('Recipe cookTime:', recipe?.cookTime);
       resetForm();
     }
-  }, [open, resetForm]);
+  }, [open, recipe, resetForm]);
 
   useEffect(() => {
     return () => {
@@ -73,9 +79,7 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    // Handle number fields
     if (name === 'prepTime' || name === 'cookTime' || name === 'servings') {
-      // Only allow numbers
       const numValue = value.replace(/[^0-9]/g, '');
       setFormData(prev => ({ ...prev, [name]: numValue }));
     } else {
@@ -97,11 +101,14 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
 
   const handleAddIngredient = () => {
     if (ingredientInput.name.trim()) {
+      // Validate quantity is a number
+      const quantity = ingredientInput.quantity.replace(/[^0-9.]/g, '');
+      
       setFormData(prev => ({
         ...prev,
         ingredients: [...prev.ingredients, { 
           name: ingredientInput.name.trim(),
-          quantity: ingredientInput.quantity.trim(),
+          quantity: quantity,
           unit: ingredientInput.unit.trim()
         }]
       }));
@@ -136,64 +143,56 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
     }));
   };
 
- const handleSubmit = (e) => {
-  e.preventDefault();
-  
-  // Validate required fields
-  if (!formData.title.trim()) {
-    alert('Please enter a recipe title');
-    return;
-  }
-  
-  if (!formData.mealType) {
-    alert('Please select a meal type');
-    return;
-  }
-  
-  if (!formData.difficulty) {
-    alert('Please select a difficulty level');
-    return;
-  }
-  
-  // Create FormData for multipart/form-data
-  const formDataToSend = new FormData();
-  
-  // Add all text fields
-  formDataToSend.append('title', formData.title.trim());
-  formDataToSend.append('description', formData.description || '');
-  formDataToSend.append('mealType', formData.mealType);
-  formDataToSend.append('difficulty', formData.difficulty);
-  formDataToSend.append('prepTime', formData.prepTime || '0');
-  formDataToSend.append('cookTime', formData.cookTime || '0');
-  formDataToSend.append('servings', formData.servings || '4');
-  formDataToSend.append('category', formData.category || '');
-  formDataToSend.append('isFilipino', 'true');
-  
-  // Add ingredients as JSON string
-  formDataToSend.append('ingredients', JSON.stringify(formData.ingredients));
-  
-  // Add instructions as JSON string
-  formDataToSend.append('instructions', JSON.stringify(formData.instructions));
-  
-  // Add image if exists
-  if (imageFile) {
-    formDataToSend.append('recipeImage', imageFile);
-  }
-  
-  console.log('Submitting recipe:', {
-    title: formData.title,
-    mealType: formData.mealType,
-    difficulty: formData.difficulty,
-    prepTime: formData.prepTime,
-    cookTime: formData.cookTime,
-    servings: formData.servings,
-    ingredients: formData.ingredients.length,
-    instructions: formData.instructions.length,
-    hasImage: !!imageFile
-  });
-  
-  onSave(formDataToSend, imageFile);
-};
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (!formData.title.trim()) {
+      alert('Please enter a recipe title');
+      return;
+    }
+    
+    if (!formData.mealType) {
+      alert('Please select a meal type');
+      return;
+    }
+    
+    if (!formData.difficulty) {
+      alert('Please select a difficulty level');
+      return;
+    }
+    
+    const formDataToSend = new FormData();
+    
+    formDataToSend.append('title', formData.title.trim());
+    formDataToSend.append('description', formData.description || '');
+    formDataToSend.append('mealType', formData.mealType);
+    formDataToSend.append('difficulty', formData.difficulty);
+    formDataToSend.append('prepTime', formData.prepTime || '0');
+    formDataToSend.append('cookTime', formData.cookTime || '0');
+    formDataToSend.append('servings', formData.servings || '4');
+    formDataToSend.append('isFilipino', 'true');
+    
+    formDataToSend.append('ingredients', JSON.stringify(formData.ingredients));
+    formDataToSend.append('instructions', JSON.stringify(formData.instructions));
+    
+    if (imageFile) {
+      formDataToSend.append('recipeImage', imageFile);
+    }
+    
+    console.log('Submitting recipe:', {
+      title: formData.title,
+      mealType: formData.mealType,
+      difficulty: formData.difficulty,
+      prepTime: formData.prepTime,
+      cookTime: formData.cookTime,
+      servings: formData.servings,
+      ingredients: formData.ingredients.length,
+      instructions: formData.instructions.length,
+      hasImage: !!imageFile
+    });
+    
+    onSave(formDataToSend, imageFile);
+  };
 
   if (!open) return null;
 
@@ -307,17 +306,6 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
                     step="1"
                   />
                 </div>
-                
-                <div className="form-group">
-                  <label>Categories (comma separated)</label>
-                  <input
-                    type="text"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    placeholder="e.g., Filipino, Main Dish, Chicken"
-                  />
-                </div>
               </div>
             </div>
 
@@ -365,14 +353,20 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
                   onChange={(e) => setIngredientInput({ ...ingredientInput, name: e.target.value })}
                 />
                 <input
-                  type="text"
+                  type="number"
                   placeholder="Quantity"
                   value={ingredientInput.quantity}
-                  onChange={(e) => setIngredientInput({ ...ingredientInput, quantity: e.target.value })}
+                  onChange={(e) => {
+                    // Allow only numbers
+                    const value = e.target.value;
+                    setIngredientInput({ ...ingredientInput, quantity: value });
+                  }}
+                  min="0"
+                  step="0.01"
                 />
                 <input
                   type="text"
-                  placeholder="Unit"
+                  placeholder="Unit (e.g., cup, tbsp, kg)"
                   value={ingredientInput.unit}
                   onChange={(e) => setIngredientInput({ ...ingredientInput, unit: e.target.value })}
                 />

@@ -186,7 +186,7 @@ const AdminRecipes = () => {
         recipe={editingRecipe}
       />
     </div>
-  );
+  ); 
 };
 
 export default AdminRecipes;
