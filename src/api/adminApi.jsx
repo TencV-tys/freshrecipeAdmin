@@ -67,7 +67,7 @@ export const getUserDetails = async (userId) => {
 export const banUser = async (userId, data) => {
   const response = await api.put(`/admin/users/${userId}/ban`, data);
   return response.data;
-};
+}; 
 
 export const suspendUser = async (userId, data) => {
   const response = await api.put(`/admin/users/${userId}/suspend`, data);
@@ -101,17 +101,29 @@ export const getRecipes = async () => {
 };
 
 export const createRecipe = async (recipeData, imageFile) => {
-  const formData = new FormData();
-  Object.keys(recipeData).forEach(key => {
-    if (recipeData[key] !== undefined && recipeData[key] !== null) {
-      if (Array.isArray(recipeData[key])) {
-        formData.append(key, JSON.stringify(recipeData[key]));
-      } else {
-        formData.append(key, recipeData[key]);
-      }
+  console.log('createRecipe called with data type:', recipeData instanceof FormData ? 'FormData' : typeof recipeData);
+  
+  // If recipeData is already FormData, use it directly
+  let formData;
+  if (recipeData instanceof FormData) {
+    formData = recipeData;
+  } else {
+    formData = new FormData();
+    formData.append('title', recipeData.title);
+    formData.append('description', recipeData.description || '');
+    formData.append('mealType', recipeData.mealType);
+    formData.append('difficulty', recipeData.difficulty);
+    formData.append('prepTime', recipeData.prepTime);
+    formData.append('cookTime', recipeData.cookTime);
+    formData.append('servings', recipeData.servings);
+    formData.append('category', recipeData.category);
+    formData.append('ingredients', JSON.stringify(recipeData.ingredients));
+    formData.append('instructions', JSON.stringify(recipeData.instructions));
+    if (imageFile) {
+      formData.append('recipeImage', imageFile);
     }
-  });
-  if (imageFile) formData.append('recipeImage', imageFile);
+  }
+   
   const response = await api.post('/admin/recipes', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
@@ -133,12 +145,16 @@ export const updateRecipe = async (id, recipeData, imageFile) => {
   const response = await api.put(`/admin/recipes/${id}`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
-  return response.data;
+  return response.data; 
 };
 
 export const deleteRecipe = async (id) => {
   const response = await api.delete(`/admin/recipes/${id}`);
   return response.data;
 };
-
+// Add this function
+export const getDashboardData = async () => {
+  const response = await api.get('/admin/dashboard');
+  return response.data;
+};
 export default api;

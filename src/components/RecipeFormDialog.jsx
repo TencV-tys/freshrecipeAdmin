@@ -67,7 +67,7 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
       if (imagePreview && imagePreview.startsWith('blob:')) {
         URL.revokeObjectURL(imagePreview);
       }
-    };
+    }; 
   }, [imagePreview]);
 
   const handleChange = (e) => {
@@ -105,14 +105,18 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
   };
 
   const handleAddInstruction = () => {
-    if (instructionInput) {
-      setFormData(prev => ({
-        ...prev,
-        instructions: [...prev.instructions, { step: prev.instructions.length + 1, text: instructionInput }]
-      }));
-      setInstructionInput('');
-    }
-  };
+  if (instructionInput) {
+    setFormData(prev => ({
+      ...prev,
+      instructions: [...prev.instructions, { 
+        step: prev.instructions.length + 1, 
+        step_number: prev.instructions.length + 1,  // ✅ Add both
+        text: instructionInput 
+      }]
+    }));
+    setInstructionInput('');
+  }
+};
 
   const handleRemoveInstruction = (index) => {
     setFormData(prev => ({
@@ -121,21 +125,61 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const recipeData = {
-      ...formData,
-      prepTime: parseInt(formData.prepTime) || 0,
-      cookTime: parseInt(formData.cookTime) || 0,
-      servings: parseInt(formData.servings) || 4,
-      category: formData.category.split(',').map(c => c.trim()).filter(c => c),
-      isFilipino: true,
-      ingredients: formData.ingredients,
-      instructions: formData.instructions
-    };
-    onSave(recipeData, imageFile);
-  };
 
+  const handleSubmit = (e) => {
+  e.preventDefault();
+  
+  // Validate required fields
+  if (!formData.title.trim()) {
+    alert('Please enter a recipe title');
+    return;
+  }
+  
+  if (!formData.mealType) {
+    alert('Please select a meal type');
+    return;
+  }
+  
+  if (!formData.difficulty) {
+    alert('Please select a difficulty level');
+    return;
+  }
+  
+  // Create FormData for multipart/form-data
+  const formDataToSend = new FormData();
+  
+  // Add all text fields (make sure they're not empty)
+  formDataToSend.append('title', formData.title);
+  formDataToSend.append('description', formData.description || '');
+  formDataToSend.append('mealType', formData.mealType);
+  formDataToSend.append('difficulty', formData.difficulty);
+  formDataToSend.append('prepTime', formData.prepTime || '0');
+  formDataToSend.append('cookTime', formData.cookTime || '0');
+  formDataToSend.append('servings', formData.servings || '4');
+  formDataToSend.append('category', formData.category || '');
+  formDataToSend.append('isFilipino', 'true');
+  
+  // Add ingredients as JSON string
+  formDataToSend.append('ingredients', JSON.stringify(formData.ingredients));
+  
+  // Add instructions as JSON string
+  formDataToSend.append('instructions', JSON.stringify(formData.instructions));
+  
+  // Add image if exists
+  if (imageFile) {
+    formDataToSend.append('recipeImage', imageFile);
+  }
+  
+  console.log('Submitting recipe:', {
+    title: formData.title,
+    mealType: formData.mealType,
+    difficulty: formData.difficulty
+  });
+  
+  onSave(formDataToSend, imageFile);
+};
+
+  
   if (!open) return null;
 
   return (
@@ -182,23 +226,35 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
                 
                 <div className="form-group">
                   <label>Meal Type *</label>
-                  <select name="mealType" value={formData.mealType} onChange={handleChange} required>
-                    <option value="">Select meal type</option>
-                    <option value="Breakfast">Breakfast</option>
-                    <option value="Lunch">Lunch</option>
-                    <option value="Dinner">Dinner</option>
-                    <option value="Snack">Snack</option>
-                  </select>
+                   <select 
+  name="mealType" 
+  value={formData.mealType} 
+  onChange={handleChange} 
+  required
+  className={!formData.mealType ? 'error-border' : ''}
+>
+  <option value="">Select meal type</option>
+  <option value="Breakfast">Breakfast</option>
+  <option value="Lunch">Lunch</option>
+  <option value="Dinner">Dinner</option>
+  <option value="Snack">Snack</option>
+</select>
                 </div>
                 
                 <div className="form-group">
                   <label>Difficulty *</label>
-                  <select name="difficulty" value={formData.difficulty} onChange={handleChange} required>
-                    <option value="">Select difficulty</option>
-                    <option value="Easy">Easy</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Hard">Hard</option>
-                  </select>
+                   <select 
+  name="difficulty" 
+  value={formData.difficulty} 
+  onChange={handleChange} 
+  required
+  className={!formData.difficulty ? 'error-border' : ''}
+>
+  <option value="">Select difficulty</option>
+  <option value="Easy">Easy</option>
+  <option value="Medium">Medium</option>
+  <option value="Hard">Hard</option>
+</select>
                 </div>
                 
                 <div className="form-group">

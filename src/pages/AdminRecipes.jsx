@@ -49,20 +49,45 @@ const AdminRecipes = () => {
     }
   };
 
-  const handleSaveRecipe = async (recipeData, imageFile) => {
-    try {
-      if (editingRecipe) {
-        await updateRecipe(editingRecipe.id, recipeData, imageFile);
-      } else {
-        await createRecipe(recipeData, imageFile);
-      }
-      setRecipeDialogOpen(false);
-      fetchRecipes();
-    } catch (error) {
-      console.error('Failed to save recipe:', error);
-      alert('Failed to save recipe');
+  
+const handleSaveRecipe = async (recipeData, imageFile) => {
+  console.log('Saving recipe with data:', recipeData);
+  
+  // If recipeData is FormData, use it directly
+  const dataToSend = recipeData instanceof FormData ? recipeData : (() => {
+    const fd = new FormData();
+    fd.append('title', recipeData.title);
+    fd.append('description', recipeData.description || '');
+    fd.append('mealType', recipeData.mealType);
+    fd.append('difficulty', recipeData.difficulty);
+    fd.append('prepTime', recipeData.prepTime);
+    fd.append('cookTime', recipeData.cookTime);
+    fd.append('servings', recipeData.servings);
+    fd.append('category', recipeData.category);
+    fd.append('ingredients', JSON.stringify(recipeData.ingredients));
+    fd.append('instructions', JSON.stringify(recipeData.instructions));
+    if (imageFile) {
+      fd.append('recipeImage', imageFile);
     }
-  };
+    return fd;
+  })();
+  
+  try {
+    if (editingRecipe) {
+      await updateRecipe(editingRecipe.id, dataToSend, imageFile);
+      alert('Recipe updated successfully');
+    } else {
+      await createRecipe(dataToSend, imageFile);
+      alert('Recipe created successfully');
+    } 
+    setRecipeDialogOpen(false);
+    fetchRecipes();
+  } catch (error) {
+    console.error('Failed to save recipe:', error);
+    console.error('Error response:', error.response?.data);
+    alert(error.response?.data?.message || 'Failed to save recipe');
+  }
+};
 
   const filteredRecipes = recipes.filter(recipe => {
     const matchesSearch = recipe.title?.toLowerCase().includes(search.toLowerCase()) ||

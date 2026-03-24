@@ -86,6 +86,10 @@ body {
   --header-bg: #ffffff;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --input-bg: #ffffff;
+  --hover-bg: #f1f5f9;
+  --table-header-bg: #f8fafc;
+  --table-row-hover: #f1f5f9;
 }
 
 /* Dark Mode */
@@ -102,6 +106,10 @@ body {
   --header-bg: #1e293b;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+  --input-bg: #334155;
+  --hover-bg: #334155;
+  --table-header-bg: #1e293b;
+  --table-row-hover: #334155;
 }
 
 * {
