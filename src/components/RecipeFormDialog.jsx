@@ -67,12 +67,20 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
       if (imagePreview && imagePreview.startsWith('blob:')) {
         URL.revokeObjectURL(imagePreview);
       }
-    }; 
+    };
   }, [imagePreview]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Handle number fields
+    if (name === 'prepTime' || name === 'cookTime' || name === 'servings') {
+      // Only allow numbers
+      const numValue = value.replace(/[^0-9]/g, '');
+      setFormData(prev => ({ ...prev, [name]: numValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleImageChange = (e) => {
@@ -88,10 +96,14 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
   };
 
   const handleAddIngredient = () => {
-    if (ingredientInput.name) {
+    if (ingredientInput.name.trim()) {
       setFormData(prev => ({
         ...prev,
-        ingredients: [...prev.ingredients, { ...ingredientInput }]
+        ingredients: [...prev.ingredients, { 
+          name: ingredientInput.name.trim(),
+          quantity: ingredientInput.quantity.trim(),
+          unit: ingredientInput.unit.trim()
+        }]
       }));
       setIngredientInput({ name: '', quantity: '', unit: '' });
     }
@@ -105,18 +117,17 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
   };
 
   const handleAddInstruction = () => {
-  if (instructionInput) {
-    setFormData(prev => ({
-      ...prev,
-      instructions: [...prev.instructions, { 
-        step: prev.instructions.length + 1, 
-        step_number: prev.instructions.length + 1,  // ✅ Add both
-        text: instructionInput 
-      }]
-    }));
-    setInstructionInput('');
-  }
-};
+    if (instructionInput.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        instructions: [...prev.instructions, { 
+          step: prev.instructions.length + 1, 
+          text: instructionInput.trim() 
+        }]
+      }));
+      setInstructionInput('');
+    }
+  };
 
   const handleRemoveInstruction = (index) => {
     setFormData(prev => ({
@@ -125,8 +136,7 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
     }));
   };
 
-
-  const handleSubmit = (e) => {
+ const handleSubmit = (e) => {
   e.preventDefault();
   
   // Validate required fields
@@ -148,8 +158,8 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
   // Create FormData for multipart/form-data
   const formDataToSend = new FormData();
   
-  // Add all text fields (make sure they're not empty)
-  formDataToSend.append('title', formData.title);
+  // Add all text fields
+  formDataToSend.append('title', formData.title.trim());
   formDataToSend.append('description', formData.description || '');
   formDataToSend.append('mealType', formData.mealType);
   formDataToSend.append('difficulty', formData.difficulty);
@@ -173,13 +183,18 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
   console.log('Submitting recipe:', {
     title: formData.title,
     mealType: formData.mealType,
-    difficulty: formData.difficulty
+    difficulty: formData.difficulty,
+    prepTime: formData.prepTime,
+    cookTime: formData.cookTime,
+    servings: formData.servings,
+    ingredients: formData.ingredients.length,
+    instructions: formData.instructions.length,
+    hasImage: !!imageFile
   });
   
   onSave(formDataToSend, imageFile);
 };
 
-  
   if (!open) return null;
 
   return (
@@ -190,7 +205,6 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
 
-        {/* Scrollable content area */}
         <div className="modal-body">
           <form onSubmit={handleSubmit}>
             {/* Basic Info Section */}
@@ -226,35 +240,33 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
                 
                 <div className="form-group">
                   <label>Meal Type *</label>
-                   <select 
-  name="mealType" 
-  value={formData.mealType} 
-  onChange={handleChange} 
-  required
-  className={!formData.mealType ? 'error-border' : ''}
->
-  <option value="">Select meal type</option>
-  <option value="Breakfast">Breakfast</option>
-  <option value="Lunch">Lunch</option>
-  <option value="Dinner">Dinner</option>
-  <option value="Snack">Snack</option>
-</select>
+                  <select 
+                    name="mealType" 
+                    value={formData.mealType} 
+                    onChange={handleChange} 
+                    required
+                  >
+                    <option value="">Select meal type</option>
+                    <option value="Breakfast">Breakfast</option>
+                    <option value="Lunch">Lunch</option>
+                    <option value="Dinner">Dinner</option>
+                    <option value="Snack">Snack</option>
+                  </select>
                 </div>
                 
                 <div className="form-group">
                   <label>Difficulty *</label>
-                   <select 
-  name="difficulty" 
-  value={formData.difficulty} 
-  onChange={handleChange} 
-  required
-  className={!formData.difficulty ? 'error-border' : ''}
->
-  <option value="">Select difficulty</option>
-  <option value="Easy">Easy</option>
-  <option value="Medium">Medium</option>
-  <option value="Hard">Hard</option>
-</select>
+                  <select 
+                    name="difficulty" 
+                    value={formData.difficulty} 
+                    onChange={handleChange} 
+                    required
+                  >
+                    <option value="">Select difficulty</option>
+                    <option value="Easy">Easy</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Hard">Hard</option>
+                  </select>
                 </div>
                 
                 <div className="form-group">
@@ -265,6 +277,8 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
                     value={formData.prepTime}
                     onChange={handleChange}
                     placeholder="e.g., 15"
+                    min="0"
+                    step="1"
                   />
                 </div>
                 
@@ -276,6 +290,8 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
                     value={formData.cookTime}
                     onChange={handleChange}
                     placeholder="e.g., 30"
+                    min="0"
+                    step="1"
                   />
                 </div>
                 
@@ -287,6 +303,8 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
                     value={formData.servings}
                     onChange={handleChange}
                     placeholder="e.g., 4"
+                    min="1"
+                    step="1"
                   />
                 </div>
                 
@@ -401,7 +419,6 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
           </form>
         </div>
 
-        {/* Footer outside the scrollable area */}
         <div className="modal-footer">
           <button type="button" onClick={onClose} className="cancel-btn">Cancel</button>
           <button type="submit" className="submit-btn" onClick={handleSubmit}>

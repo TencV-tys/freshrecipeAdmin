@@ -12,12 +12,14 @@ const AdminRecipes = () => {
   const [filterMealType, setFilterMealType] = useState('all');
 
   const fetchRecipes = useCallback(async () => {
+    console.log('📖 Fetching recipes...');
     setLoading(true);
     try {
       const data = await getRecipes();
+      console.log('✅ Recipes fetched:', data.length);
       setRecipes(data);
     } catch (error) {
-      console.error('Failed to fetch recipes:', error);
+      console.error('❌ Failed to fetch recipes:', error);
     } finally {
       setLoading(false);
     }
@@ -28,66 +30,77 @@ const AdminRecipes = () => {
   }, [fetchRecipes]);
 
   const handleAddRecipe = () => {
+    console.log('➕ Adding new recipe');
     setEditingRecipe(null);
     setRecipeDialogOpen(true);
   };
 
   const handleEditRecipe = (recipe) => {
+    console.log('✏️ Editing recipe:', recipe);
+    console.log('Recipe ID:', recipe.id);
+    console.log('Recipe _id:', recipe._id);
     setEditingRecipe(recipe);
     setRecipeDialogOpen(true);
   };
 
-  const handleDeleteRecipe = async (recipeId) => {
+  const handleDeleteRecipe = async (recipe) => {
+    console.log('🗑️ Delete button clicked for recipe:', recipe);
+    const recipeId = recipe.id || recipe._id;
+    console.log('Recipe ID to delete:', recipeId);
+    
+    if (!recipeId) {
+      console.error('❌ No recipe ID found!', recipe);
+      alert('Cannot delete: Recipe ID not found');
+      return;
+    }
+    
     if (window.confirm('Are you sure you want to delete this recipe?')) {
+      console.log('🗑️ Confirmed deletion for ID:', recipeId);
       try {
-        await deleteRecipe(recipeId);
+        const result = await deleteRecipe(recipeId);
+        console.log('✅ Delete successful:', result);
+        alert('Recipe deleted successfully');
         fetchRecipes();
       } catch (error) {
-        console.error('Failed to delete recipe:', error);
-        alert('Failed to delete recipe');
+        console.error('❌ Failed to delete recipe:', error);
+        console.error('Error details:', error.response?.data);
+        alert('Failed to delete recipe: ' + (error.response?.data?.message || error.message));
       }
     }
   };
 
-  
-const handleSaveRecipe = async (recipeData, imageFile) => {
-  console.log('Saving recipe with data:', recipeData);
-  
-  // If recipeData is FormData, use it directly
-  const dataToSend = recipeData instanceof FormData ? recipeData : (() => {
-    const fd = new FormData();
-    fd.append('title', recipeData.title);
-    fd.append('description', recipeData.description || '');
-    fd.append('mealType', recipeData.mealType);
-    fd.append('difficulty', recipeData.difficulty);
-    fd.append('prepTime', recipeData.prepTime);
-    fd.append('cookTime', recipeData.cookTime);
-    fd.append('servings', recipeData.servings);
-    fd.append('category', recipeData.category);
-    fd.append('ingredients', JSON.stringify(recipeData.ingredients));
-    fd.append('instructions', JSON.stringify(recipeData.instructions));
-    if (imageFile) {
-      fd.append('recipeImage', imageFile);
+  const handleSaveRecipe = async (recipeData, imageFile) => {
+    console.log('💾 Saving recipe, editingRecipe:', editingRecipe);
+    
+    try {
+      if (editingRecipe) {
+        const recipeId = editingRecipe.id || editingRecipe._id;
+        console.log('🔄 Updating recipe ID:', recipeId);
+        console.log('📦 Update data:', recipeData);
+        
+        if (!recipeId) {
+          console.error('❌ No recipe ID found for update');
+          alert('Recipe ID not found');
+          return;
+        }
+        
+        const result = await updateRecipe(recipeId, recipeData, imageFile);
+        console.log('✅ Update successful:', result);
+        alert('Recipe updated successfully');
+      } else {
+        console.log('➕ Creating new recipe');
+        const result = await createRecipe(recipeData, imageFile);
+        console.log('✅ Create successful:', result);
+        alert('Recipe created successfully');
+      }
+      setRecipeDialogOpen(false);
+      fetchRecipes();
+    } catch (error) {
+      console.error('❌ Failed to save recipe:', error);
+      console.error('Error response:', error.response?.data);
+      alert(error.response?.data?.message || 'Failed to save recipe');
     }
-    return fd;
-  })();
-  
-  try {
-    if (editingRecipe) {
-      await updateRecipe(editingRecipe.id, dataToSend, imageFile);
-      alert('Recipe updated successfully');
-    } else {
-      await createRecipe(dataToSend, imageFile);
-      alert('Recipe created successfully');
-    } 
-    setRecipeDialogOpen(false);
-    fetchRecipes();
-  } catch (error) {
-    console.error('Failed to save recipe:', error);
-    console.error('Error response:', error.response?.data);
-    alert(error.response?.data?.message || 'Failed to save recipe');
-  }
-};
+  };
 
   const filteredRecipes = recipes.filter(recipe => {
     const matchesSearch = recipe.title?.toLowerCase().includes(search.toLowerCase()) ||
@@ -139,8 +152,8 @@ const handleSaveRecipe = async (recipeData, imageFile) => {
         </div>
       ) : (
         <div className="recipes-grid">
-          {filteredRecipes.map(recipe => (
-            <div key={recipe.id} className="recipe-card">
+          {filteredRecipes.map((recipe, index) => (
+            <div key={recipe.id || recipe._id || index} className="recipe-card">
               <div className="recipe-image">
                 {recipe.image ? (
                   <img src={`http://localhost:5000${recipe.image}`} alt={recipe.title} />
@@ -158,7 +171,7 @@ const handleSaveRecipe = async (recipeData, imageFile) => {
                 <p className="recipe-description">{recipe.description?.substring(0, 100)}...</p>
                 <div className="recipe-actions">
                   <button className="edit-btn" onClick={() => handleEditRecipe(recipe)}>Edit</button>
-                  <button className="delete-btn" onClick={() => handleDeleteRecipe(recipe.id)}>Delete</button>
+                  <button className="delete-btn" onClick={() => handleDeleteRecipe(recipe)}>Delete</button>
                 </div>
               </div>
             </div>

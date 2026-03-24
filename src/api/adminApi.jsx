@@ -130,28 +130,64 @@ export const createRecipe = async (recipeData, imageFile) => {
   return response.data;
 };
 
+
 export const updateRecipe = async (id, recipeData, imageFile) => {
-  const formData = new FormData();
-  Object.keys(recipeData).forEach(key => {
-    if (recipeData[key] !== undefined && recipeData[key] !== null) {
-      if (Array.isArray(recipeData[key])) {
-        formData.append(key, JSON.stringify(recipeData[key]));
-      } else {
-        formData.append(key, recipeData[key]);
-      }
+  console.log('updateRecipe called with id:', id);
+  
+  if (!id) {
+    console.error('No recipe ID provided for update');
+    throw new Error('Recipe ID is required');
+  }
+  
+  let formData;
+  if (recipeData instanceof FormData) {
+    formData = recipeData;
+  } else {
+    formData = new FormData();
+    formData.append('title', recipeData.title);
+    formData.append('description', recipeData.description || '');
+    formData.append('mealType', recipeData.mealType);
+    formData.append('difficulty', recipeData.difficulty);
+    formData.append('prepTime', recipeData.prepTime || '0');
+    formData.append('cookTime', recipeData.cookTime || '0');
+    formData.append('servings', recipeData.servings || '4');
+    formData.append('category', recipeData.category || '');
+    formData.append('isFilipino', 'true');
+    if (recipeData.ingredients) {
+      formData.append('ingredients', JSON.stringify(recipeData.ingredients));
     }
-  });
-  if (imageFile) formData.append('recipeImage', imageFile);
+    if (recipeData.instructions) {
+      formData.append('instructions', JSON.stringify(recipeData.instructions));
+    }
+    if (imageFile) {
+      formData.append('recipeImage', imageFile);
+    }
+  }
+  
   const response = await api.put(`/admin/recipes/${id}`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
-  return response.data; 
-};
-
-export const deleteRecipe = async (id) => {
-  const response = await api.delete(`/admin/recipes/${id}`);
   return response.data;
 };
+
+
+export const deleteRecipe = async (id) => {
+  console.log('🗑️ deleteRecipe called with id:', id);
+  console.log('Type of id:', typeof id);
+  
+  if (!id) {
+    console.error('❌ No recipe ID provided for delete');
+    throw new Error('Recipe ID is required');
+  }
+  
+  const recipeId = typeof id === 'object' ? (id.id || id._id) : id;
+  console.log('Final recipeId to delete:', recipeId);
+  
+  const response = await api.delete(`/admin/recipes/${recipeId}`);
+  console.log('✅ Delete response:', response.data);
+  return response.data;
+};
+
 // Add this function
 export const getDashboardData = async () => {
   const response = await api.get('/admin/dashboard');
