@@ -12,6 +12,7 @@ const AdminRecipes = () => {
   const [editingRecipe, setEditingRecipe] = useState(null);
   const [viewingRecipe, setViewingRecipe] = useState(null);
   const [filterMealType, setFilterMealType] = useState('all');
+  const [refreshKey, setRefreshKey] = useState(0); // Add this to force refresh
 
   const fetchRecipes = useCallback(async () => {
     console.log('📖 Fetching recipes...');
@@ -29,7 +30,7 @@ const AdminRecipes = () => {
 
   useEffect(() => {
     fetchRecipes();
-  }, [fetchRecipes]);
+  }, [fetchRecipes, refreshKey]); // Add refreshKey to dependencies
 
   const handleAddRecipe = () => {
     console.log('➕ Adding new recipe');
@@ -62,7 +63,7 @@ const AdminRecipes = () => {
       try {
         await deleteRecipe(recipeId);
         alert('Recipe deleted successfully');
-        fetchRecipes();
+        setRefreshKey(prev => prev + 1); // Force refresh
       } catch (error) {
         console.error('❌ Failed to delete recipe:', error);
         alert('Failed to delete recipe');
@@ -81,13 +82,23 @@ const AdminRecipes = () => {
           return;
         }
         await updateRecipe(recipeId, recipeData, imageFile);
+        console.log('✅ Recipe updated successfully');
         alert('Recipe updated successfully');
       } else {
         await createRecipe(recipeData, imageFile);
+        console.log('✅ Recipe created successfully');
         alert('Recipe created successfully');
       }
+      
+      // Close dialog first
       setRecipeDialogOpen(false);
-      fetchRecipes();
+      setEditingRecipe(null);
+      
+      // Force refresh after a short delay to ensure database is updated
+      setTimeout(() => {
+        setRefreshKey(prev => prev + 1);
+      }, 500);
+      
     } catch (error) {
       console.error('❌ Failed to save recipe:', error);
       alert(error.response?.data?.message || 'Failed to save recipe');
@@ -177,7 +188,10 @@ const AdminRecipes = () => {
 
       <RecipeFormDialog
         open={recipeDialogOpen}
-        onClose={() => setRecipeDialogOpen(false)}
+        onClose={() => {
+          setRecipeDialogOpen(false);
+          setEditingRecipe(null);
+        }}
         onSave={handleSaveRecipe}
         recipe={editingRecipe}
       />
