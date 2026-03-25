@@ -16,7 +16,6 @@ const AdminUsers = () => {
   // Helper function to get user ID from different possible field names
   const getUserId = (user) => {
     if (!user) return null;
-    // Try different possible ID field names
     return user._id || user.id || user.userId || user.ID || null;
   };
 
@@ -202,10 +201,24 @@ const AdminUsers = () => {
     }
   };
 
+  // Get filter display name for empty state
+  const getFilterDisplayName = () => {
+    switch(filter) {
+      case 'active': return 'active';
+      case 'suspended': return 'suspended';
+      case 'banned': return 'banned';
+      default: return '';
+    }
+  };
+
   const filteredUsers = users.filter(user =>
     user.username?.toLowerCase().includes(search.toLowerCase()) ||
     user.email?.toLowerCase().includes(search.toLowerCase())
   );
+
+  // Check if there are no users after filtering
+  const hasNoUsers = filteredUsers.length === 0;
+  const hasSearchTerm = search.length > 0;
 
   return (
     <div className="admin-users">
@@ -234,6 +247,34 @@ const AdminUsers = () => {
 
         {loading ? (
           <div className="users-loading">Loading users...</div>
+        ) : hasNoUsers ? (
+          <div className="empty-state">
+            {hasSearchTerm ? (
+              <>
+                <div className="empty-icon">🔍</div>
+                <h3>No users found</h3>
+                <p>No users match "{search}"</p>
+                <button className="clear-search-btn" onClick={() => setSearch('')}>
+                  Clear Search
+                </button>
+              </>
+            ) : filter !== 'all' ? (
+              <>
+                <div className="empty-icon">👥</div>
+                <h3>No {getFilterDisplayName()} users</h3>
+                <p>There are no {getFilterDisplayName()} users at the moment.</p>
+                <button className="clear-filter-btn" onClick={() => setFilter('all')}>
+                  View All Users
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="empty-icon">🎉</div>
+                <h3>No users yet</h3>
+                <p>Users will appear here when they register.</p>
+              </>
+            )}
+          </div>
         ) : (
           <div className="users-table-container">
             <table className="users-table">
