@@ -16,7 +16,7 @@ const AdminSidebar = ({ collapsed, onToggle }) => {
   ];
 
   const handleLogout = async () => {
-    await logout();
+    await logout(); 
     navigate('/login');
   };
 

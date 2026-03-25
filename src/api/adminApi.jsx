@@ -11,25 +11,45 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Handle 401 Unauthorized - token expired or invalid
     if (error.response?.status === 401) {
       localStorage.removeItem('adminUser');
       window.location.href = '/login';
+    }
+    // Handle 403 Forbidden - account banned or suspended
+    if (error.response?.status === 403) {
+    
+      const code = error.response?.data?.code;
+      
+      if (code === 'ACCOUNT_BANNED' || code === 'ACCOUNT_SUSPENDED') {
+        localStorage.removeItem('adminUser');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
 );
 
-// Auth
+// In adminApi.jsx - make sure adminLogin returns the user object properly
 export const adminLogin = async (email, password) => {
   const response = await api.post('/auth/login', { email, password });
-  if (response.data.role !== 'admin') throw new Error('Unauthorized');
-  localStorage.setItem('adminUser', JSON.stringify(response.data));
-  return response.data;
+  // Check if user is admin
+  if (response.data.user.role !== 'admin') {
+    throw new Error('Unauthorized - Admin access only');
+  }
+  const userData = response.data.user;
+  localStorage.setItem('adminUser', JSON.stringify(userData));
+  return userData;
 };
 
 export const adminLogout = async () => {
-  await api.post('/auth/logout');
-  localStorage.removeItem('adminUser');
+  try {
+    await api.post('/auth/logout');
+  } catch (error) {
+    console.error('Logout error:', error);
+  } finally {
+    localStorage.removeItem('adminUser');
+  }
 };
 
 export const checkAdminAuth = async () => {
@@ -49,6 +69,11 @@ export const checkAdminAuth = async () => {
 // Dashboard
 export const getStats = async () => {
   const response = await api.get('/admin/stats');
+  return response.data;
+};
+
+export const getDashboardData = async () => {
+  const response = await api.get('/admin/dashboard');
   return response.data;
 };
 
@@ -103,7 +128,6 @@ export const getRecipes = async () => {
 export const createRecipe = async (recipeData, imageFile) => {
   console.log('createRecipe called with data type:', recipeData instanceof FormData ? 'FormData' : typeof recipeData);
   
-  // If recipeData is already FormData, use it directly
   let formData;
   if (recipeData instanceof FormData) {
     formData = recipeData;
@@ -129,7 +153,6 @@ export const createRecipe = async (recipeData, imageFile) => {
   });
   return response.data;
 };
-
 
 export const updateRecipe = async (id, recipeData, imageFile) => {
   console.log('updateRecipe called with id:', id);
@@ -170,7 +193,6 @@ export const updateRecipe = async (id, recipeData, imageFile) => {
   return response.data;
 };
 
-
 export const deleteRecipe = async (id) => {
   console.log('🗑️ deleteRecipe called with id:', id);
   console.log('Type of id:', typeof id);
@@ -186,11 +208,6 @@ export const deleteRecipe = async (id) => {
   const response = await api.delete(`/admin/recipes/${recipeId}`);
   console.log('✅ Delete response:', response.data);
   return response.data;
-}; 
-
-// Add this function 
-export const getDashboardData = async () => {
-  const response = await api.get('/admin/dashboard');
-  return response.data;
 };
+
 export default api;

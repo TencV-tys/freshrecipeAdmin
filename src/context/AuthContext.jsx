@@ -14,16 +14,19 @@ export const AuthProvider = ({ children }) => {
       try {
         const storedUser = localStorage.getItem('adminUser');
         if (storedUser) {
-          // Remove the unused variable - just check if token exists
+          // Verify token is still valid with backend
           const verifiedUser = await checkAdminAuth();
           if (verifiedUser) {
             setUser(verifiedUser);
           } else {
+            // Token invalid or expired
             localStorage.removeItem('adminUser');
+            await adminLogout();
           }
         }
       } catch (error) {
         console.error('Auth check failed:', error);
+        localStorage.removeItem('adminUser');
       } finally {
         setLoading(false);
       }
@@ -35,15 +38,23 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await adminLogin(email, password);
       setUser(response);
-      return { success: true };
+      return { success: true, user: response };
     } catch (error) {
-      return { success: false, error: error.message };
+      return { 
+        success: false, 
+        error: error.message || 'Login failed' 
+      };
     }
   };
 
   const logout = async () => {
-    await adminLogout();
-    setUser(null);
+    try {
+      await adminLogout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+    }
   };
 
   const value = {
