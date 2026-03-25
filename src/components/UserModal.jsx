@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './UserModal.css';
 
-const UserModal = ({ user, onClose, onWarn, onBan, onSuspend, onRestore, onDelete, loading }) => {
+const UserModal = ({ user, onClose, onWarn, onBan, onSuspend, onRestore, loading }) => {
   const [banReason, setBanReason] = useState('');
   const [suspendDays, setSuspendDays] = useState(7);
   const [suspendReason, setSuspendReason] = useState('');
@@ -12,61 +12,104 @@ const UserModal = ({ user, onClose, onWarn, onBan, onSuspend, onRestore, onDelet
   const isSuspended = user?.status === 'suspended';
   const isActive = user?.status === 'active';
   
+  // Warning thresholds
+  const WARNING_THRESHOLD_SUSPEND = 3;  // After 3 warnings, can suspend
+  const WARNING_THRESHOLD_BAN = 5;      // After 5 warnings, can ban
+  const violationCount = user?.violationCount || 0;
+  
   // Check if user has uploaded photos
   const hasUploadedPhotos = user?.reportedImages?.length > 0 || user?.recipes?.length > 0 || user?.avatar;
+  
+  // Determine if suspend/ban actions are available based on warning count
+  const canSuspend = violationCount >= WARNING_THRESHOLD_SUSPEND;
+  const canBan = violationCount >= WARNING_THRESHOLD_BAN;
+  
+  // Get warning level message
+  const getWarningMessage = () => {
+    if (violationCount === 0) return 'No violations yet';
+    if (violationCount < WARNING_THRESHOLD_SUSPEND) {
+      return `${violationCount} warning(s). ${WARNING_THRESHOLD_SUSPEND - violationCount} more warning(s) until suspension is available.`;
+    }
+    if (violationCount < WARNING_THRESHOLD_BAN) {
+      return `${violationCount} warning(s). ${WARNING_THRESHOLD_BAN - violationCount} more warning(s) until permanent ban is available.`;
+    }
+    return `${violationCount} warnings - Permanent ban is now available.`;
+  };
 
   const handleWarn = () => {
-  console.log('⚠️ Warn button clicked for user:', user?.username);
-  if (!warningReason.trim()) {
-    console.log('❌ No warning reason provided');
-    alert('Please enter a reason for warning');
-    return;
-  }
-  console.log('📝 Warning reason:', warningReason);
-  if (window.confirm(`Send warning to ${user?.username}?`)) {
-    console.log('✅ Warning confirmed');
-    onWarn(warningReason);
-  }
-};
+    console.log('⚠️ Warn button clicked for user:', user?.username);
+    if (!warningReason.trim()) {
+      console.log('❌ No warning reason provided');
+      alert('Please enter a reason for warning');
+      return;
+    }
+    console.log('📝 Warning reason:', warningReason);
+    
+    const nextViolationCount = violationCount + 1;
+    let message = `Send warning to ${user?.username}?`;
+    
+    if (nextViolationCount === WARNING_THRESHOLD_SUSPEND) {
+      message = `⚠️ WARNING: This will be the ${WARNING_THRESHOLD_SUSPEND}rd warning. After this warning, suspension will be available. Continue?`;
+    } else if (nextViolationCount === WARNING_THRESHOLD_BAN) {
+      message = `⚠️⚠️ CRITICAL: This will be the ${WARNING_THRESHOLD_BAN}th warning. After this warning, permanent ban will be available. Continue?`;
+    }
+    
+    if (window.confirm(message)) {
+      console.log('✅ Warning confirmed');
+      onWarn(warningReason);
+    }
+  };
 
-const handleBan = () => {
-  console.log('🚫 Ban button clicked for user:', user?.username);
-  if (!banReason.trim()) {
-    console.log('❌ No ban reason provided');
-    alert('Please enter a reason for banning');
-    return;
-  }
-  console.log('📝 Ban reason:', banReason);
-  if (window.confirm(`Permanently ban ${user?.username}?`)) {
-    console.log('✅ Ban confirmed');
-    onBan(banReason);
-  } 
-};
+  const handleBan = () => {
+    console.log('🚫 Ban button clicked for user:', user?.username);
+    
+    if (!canBan) {
+      alert(`Cannot ban yet. User needs ${WARNING_THRESHOLD_BAN - violationCount} more warning(s) before ban is available. Current warnings: ${violationCount}/${WARNING_THRESHOLD_BAN}`);
+      return;
+    }
+    
+    if (!banReason.trim()) {
+      console.log('❌ No ban reason provided');
+      alert('Please enter a reason for banning');
+      return;
+    }
+    console.log('📝 Ban reason:', banReason);
+    
+    const message = `⚠️⚠️⚠️ PERMANENT BAN WARNING: This user has ${violationCount} warnings. Are you sure you want to permanently ban ${user?.username}? This action cannot be undone.`;
+    
+    if (window.confirm(message)) {
+      console.log('✅ Ban confirmed');
+      onBan(banReason);
+    }
+  };
 
-const handleSuspend = () => {
-  console.log('⏰ Suspend button clicked for user:', user?.username);
-  if (!suspendReason.trim()) {
-    console.log('❌ No suspension reason provided');
-    alert('Please enter a reason for suspension');
-    return;
-  }
-  console.log('📝 Suspension reason:', suspendReason);
-  console.log('📆 Suspension days:', suspendDays);
-  if (window.confirm(`Suspend ${user?.username} for ${suspendDays} days?`)) {
-    console.log('✅ Suspension confirmed');
-    onSuspend(suspendReason, suspendDays);
-  }
-}; 
+  const handleSuspend = () => {
+    console.log('⏰ Suspend button clicked for user:', user?.username);
+    
+    if (!canSuspend) {
+      alert(`Cannot suspend yet. User needs ${WARNING_THRESHOLD_SUSPEND - violationCount} more warning(s) before suspension is available. Current warnings: ${violationCount}/${WARNING_THRESHOLD_SUSPEND}`);
+      return;
+    }
+    
+    if (!suspendReason.trim()) {
+      console.log('❌ No suspension reason provided');
+      alert('Please enter a reason for suspension');
+      return;
+    }
+    console.log('📝 Suspension reason:', suspendReason);
+    console.log('📆 Suspension days:', suspendDays);
+    
+    const message = `⚠️ Suspension Warning: This user has ${violationCount} warnings. Suspend ${user?.username} for ${suspendDays} days?`;
+    
+    if (window.confirm(message)) {
+      console.log('✅ Suspension confirmed');
+      onSuspend(suspendReason, suspendDays);
+    }
+  };
 
   const handleRestore = () => {
     if (window.confirm(`Restore ${user?.username}'s account?`)) {
       onRestore();
-    }
-  };
-
-  const handleDelete = () => {
-    if (window.confirm(`Permanently delete ${user?.username}'s account? This cannot be undone.`)) {
-      onDelete();
     }
   };
 
@@ -113,6 +156,19 @@ const handleSuspend = () => {
                     {user.status === 'active' ? '✅ Active' : user.status === 'suspended' ? '⏰ Suspended' : '🚫 Banned'}
                   </span>
                 </p>
+                <p><strong>Violations:</strong> 
+                  <span className={`violation-count ${violationCount >= WARNING_THRESHOLD_BAN ? 'critical' : violationCount >= WARNING_THRESHOLD_SUSPEND ? 'warning' : 'normal'}`}>
+                    {violationCount}
+                  </span>
+                  <span className="violation-message"> - {getWarningMessage()}</span>
+                </p>
+                {violationCount >= WARNING_THRESHOLD_SUSPEND && (
+                  <p className="warning-threshold-message">
+                    {violationCount >= WARNING_THRESHOLD_BAN 
+                      ? '⚠️ User has reached permanent ban threshold' 
+                      : '⚠️ User has reached suspension threshold'}
+                  </p>
+                )}
                 {user.suspensionReason && (
                   <p><strong>Suspension Reason:</strong> {user.suspensionReason}</p>
                 )}
@@ -122,12 +178,11 @@ const handleSuspend = () => {
                 <p><strong>Joined:</strong> {new Date(user.createdAt).toLocaleDateString()}</p>
                 <p><strong>Last Active:</strong> {user.lastActive ? new Date(user.lastActive).toLocaleDateString() : 'N/A'}</p>
                 <p><strong>Saved Recipes:</strong> {user.savedRecipesCount || 0}</p>
-                <p><strong>Violations:</strong> {user.violationCount || 0}</p>
               </div>
             </div>
           )}
 
-          {/* Photos Tab */}
+          {/* Photos Tab - Keep as is */}
           {activeTab === 'photos' && (
             <div className="photos-tab">
               {loading ? (
@@ -140,7 +195,6 @@ const handleSuspend = () => {
                 </div>
               ) : (
                 <div className="photos-grid">
-                  {/* Profile Avatar */}
                   {user.avatar && (
                     <div className="photo-card">
                       <img src={user.avatar} alt="Profile" />
@@ -149,8 +203,6 @@ const handleSuspend = () => {
                       </div>
                     </div>
                   )}
-                  
-                  {/* Recipe Images */}
                   {user.recipes?.map((recipe, idx) => (
                     recipe.image && (
                       <div key={idx} className="photo-card">
@@ -162,8 +214,6 @@ const handleSuspend = () => {
                       </div>
                     )
                   ))}
-                  
-                  {/* Reported Images */}
                   {user.reportedImages?.map((img, idx) => (
                     <div key={idx} className="photo-card reported">
                       <img src={img.url} alt={`Reported ${idx + 1}`} />
@@ -192,6 +242,16 @@ const handleSuspend = () => {
                 <>
                   <div className="action-section">
                     <h3>⚠️ Warn User</h3>
+                    <div className="warning-info">
+                      <span className={`warning-level ${violationCount >= WARNING_THRESHOLD_BAN ? 'critical' : violationCount >= WARNING_THRESHOLD_SUSPEND ? 'warning' : 'normal'}`}>
+                        Current warnings: {violationCount}
+                      </span>
+                      <span className="warning-threshold">
+                        {violationCount < WARNING_THRESHOLD_SUSPEND && ` (${WARNING_THRESHOLD_SUSPEND - violationCount} more for suspension)`}
+                        {violationCount >= WARNING_THRESHOLD_SUSPEND && violationCount < WARNING_THRESHOLD_BAN && ` (${WARNING_THRESHOLD_BAN - violationCount} more for ban)`}
+                        {violationCount >= WARNING_THRESHOLD_BAN && ` (Ban threshold reached)`}
+                      </span>
+                    </div>
                     <div className="action-form">
                       <textarea
                         placeholder="Reason for warning..."
@@ -212,20 +272,31 @@ const handleSuspend = () => {
 
                   <div className="action-section">
                     <h3>⏰ Suspend Account</h3>
+                    <div className="action-status">
+                      {!canSuspend ? (
+                        <div className="disabled-warning">
+                          🔒 Suspension requires {WARNING_THRESHOLD_SUSPEND} warnings. Current: {violationCount}
+                        </div>
+                      ) : (
+                        <div className="available-warning">
+                          ✅ Suspension available ({violationCount}/{WARNING_THRESHOLD_SUSPEND} warnings)
+                        </div>
+                      )}
+                    </div>
                     <div className="action-form">
                       <textarea
                         placeholder="Reason for suspension..."
                         value={suspendReason}
                         onChange={(e) => setSuspendReason(e.target.value)}
                         rows="2"
-                        disabled={!hasUploadedPhotos}
+                        disabled={!hasUploadedPhotos || !canSuspend}
                       />
                       <div className="suspend-days">
                         <label>Duration (days):</label>
                         <select 
                           value={suspendDays} 
                           onChange={(e) => setSuspendDays(parseInt(e.target.value))}
-                          disabled={!hasUploadedPhotos}
+                          disabled={!hasUploadedPhotos || !canSuspend}
                         >
                           <option value={1}>1 day</option>
                           <option value={3}>3 days</option>
@@ -237,27 +308,38 @@ const handleSuspend = () => {
                       <button 
                         className="suspend-btn" 
                         onClick={handleSuspend} 
-                        disabled={!hasUploadedPhotos || loading}
+                        disabled={!hasUploadedPhotos || !canSuspend || loading}
                       >
-                        Suspend Account 
+                        Suspend Account
                       </button>
                     </div>
                   </div>
 
                   <div className="action-section">
                     <h3>🚫 Permanently Ban</h3>
+                    <div className="action-status">
+                      {!canBan ? (
+                        <div className="disabled-warning">
+                          🔒 Permanent ban requires {WARNING_THRESHOLD_BAN} warnings. Current: {violationCount}
+                        </div>
+                      ) : (
+                        <div className="critical-warning">
+                          ⚠️ CRITICAL: Permanent ban available ({violationCount}/{WARNING_THRESHOLD_BAN} warnings)
+                        </div>
+                      )}
+                    </div>
                     <div className="action-form">
                       <textarea
                         placeholder="Reason for permanent ban..."
                         value={banReason}
                         onChange={(e) => setBanReason(e.target.value)}
                         rows="2"
-                        disabled={!hasUploadedPhotos}
+                        disabled={!hasUploadedPhotos || !canBan}
                       />
                       <button 
                         className="ban-btn" 
                         onClick={handleBan} 
-                        disabled={!hasUploadedPhotos || loading}
+                        disabled={!hasUploadedPhotos || !canBan || loading}
                       >
                         Ban Permanently
                       </button>
@@ -275,14 +357,6 @@ const handleSuspend = () => {
                   </button>
                 </div>
               )}
-
-              <div className="action-section danger">
-                <h3>🗑️ Delete Account</h3>
-                <p>Permanently delete this user's account and all associated data.</p>
-                <button className="delete-btn" onClick={handleDelete} disabled={loading}>
-                  Delete Account
-                </button>
-              </div>
             </div>
           )}
         </div>
