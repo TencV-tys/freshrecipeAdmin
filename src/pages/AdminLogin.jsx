@@ -31,7 +31,6 @@ const AdminLogin = () => {
         <div className={styles.header}>
           <div className={styles.logo}>🍳</div>
           <h1>FreshRecipe</h1>
-          <p>Admin Dashboard</p>
         </div>
         <form onSubmit={handleSubmit} className={styles.form}>
           {error && <div className={styles.error}>{error}</div>}
@@ -41,7 +40,7 @@ const AdminLogin = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@freshrecipe.com"
+              placeholder="Enter email"
               required
             />
           </div>

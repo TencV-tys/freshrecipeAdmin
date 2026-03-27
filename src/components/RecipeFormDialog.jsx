@@ -62,8 +62,6 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
   useEffect(() => {
     if (open) {
       console.log('RecipeFormDialog opened with recipe:', recipe);
-      console.log('Recipe prepTime:', recipe?.prepTime);
-      console.log('Recipe cookTime:', recipe?.cookTime);
       resetForm();
     }
   }, [open, recipe, resetForm]);
@@ -101,14 +99,13 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
 
   const handleAddIngredient = () => {
     if (ingredientInput.name.trim()) {
-      // Validate quantity is a number
       const quantity = ingredientInput.quantity.replace(/[^0-9.]/g, '');
       
       setFormData(prev => ({
         ...prev,
         ingredients: [...prev.ingredients, { 
           name: ingredientInput.name.trim(),
-          quantity: quantity,
+          quantity: quantity || '0',
           unit: ingredientInput.unit.trim()
         }]
       }));
@@ -128,7 +125,7 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
       setFormData(prev => ({
         ...prev,
         instructions: [...prev.instructions, { 
-          step: prev.instructions.length + 1, 
+          step: prev.instructions.length + 1,
           text: instructionInput.trim() 
         }]
       }));
@@ -140,6 +137,14 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
     setFormData(prev => ({
       ...prev,
       instructions: prev.instructions.filter((_, i) => i !== index)
+    }));
+    // Re-number steps after removal
+    setFormData(prev => ({
+      ...prev,
+      instructions: prev.instructions.map((inst, idx) => ({
+        ...inst,
+        step: idx + 1
+      }))
     }));
   };
 
@@ -348,38 +353,49 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
               <div className="ingredient-input-group">
                 <input
                   type="text"
-                  placeholder="Ingredient name"
+                  placeholder="Ingredient name (e.g., Chicken)"
                   value={ingredientInput.name}
                   onChange={(e) => setIngredientInput({ ...ingredientInput, name: e.target.value })}
-                />
-                <input
-                  type="number"
-                  placeholder="Quantity"
-                  value={ingredientInput.quantity}
-                  onChange={(e) => {
-                    // Allow only numbers
-                    const value = e.target.value;
-                    setIngredientInput({ ...ingredientInput, quantity: value });
-                  }}
-                  min="0"
-                  step="0.01"
+                  className="ingredient-name-input"
                 />
                 <input
                   type="text"
-                  placeholder="Unit (e.g., cup, tbsp, kg)"
+                  placeholder="Quantity (e.g., 500g, 2, 1/2)"
+                  value={ingredientInput.quantity}
+                  onChange={(e) => setIngredientInput({ ...ingredientInput, quantity: e.target.value })}
+                  className="ingredient-quantity-input"
+                />
+                <input
+                  type="text"
+                  placeholder="Unit (e.g., kg, cup, tbsp, cloves)"
                   value={ingredientInput.unit}
                   onChange={(e) => setIngredientInput({ ...ingredientInput, unit: e.target.value })}
+                  className="ingredient-unit-input"
                 />
-                <button type="button" onClick={handleAddIngredient} className="add-btn">Add</button>
+                <button type="button" onClick={handleAddIngredient} className="add-btn">+ Add</button>
               </div>
               
               <div className="ingredients-list">
-                {formData.ingredients.map((ing, idx) => (
-                  <div key={idx} className="ingredient-item">
-                    <span>{ing.quantity} {ing.unit} {ing.name}</span>
-                    <button type="button" onClick={() => handleRemoveIngredient(idx)} className="remove-btn">×</button>
+                {formData.ingredients.length === 0 ? (
+                  <div className="empty-ingredients">
+                    <span>🍽️</span>
+                    <p>No ingredients added yet.</p>
                   </div>
-                ))}
+                ) : (
+                  formData.ingredients.map((ing, idx) => (
+                    <div key={idx} className="ingredient-item">
+                      <div className="ingredient-order">{idx + 1}</div>
+                      <div className="ingredient-details">
+                        <span className="ingredient-name">{ing.name}</span>
+                        <span className="ingredient-measurement">
+                          {ing.quantity && ing.quantity !== '0' ? ing.quantity : ''} 
+                          {ing.unit && ` ${ing.unit}`}
+                        </span>
+                      </div>
+                      <button type="button" onClick={() => handleRemoveIngredient(idx)} className="remove-btn" title="Remove">✕</button>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
@@ -391,23 +407,31 @@ const RecipeFormDialog = ({ open, onClose, onSave, recipe }) => {
               </div>
               
               <div className="instruction-input-group">
-                <input
-                  type="text"
-                  placeholder="Instruction step"
+                <textarea
+                  placeholder="Describe step by step instructions..."
                   value={instructionInput}
                   onChange={(e) => setInstructionInput(e.target.value)}
+                  rows="3"
+                  className="instruction-textarea"
                 />
-                <button type="button" onClick={handleAddInstruction} className="add-btn">Add Step</button>
+                <button type="button" onClick={handleAddInstruction} className="add-btn">+ Add Step</button>
               </div>
               
               <div className="instructions-list">
-                {formData.instructions.map((inst, idx) => (
-                  <div key={idx} className="instruction-item">
-                    <div className="step-number">{inst.step}</div>
-                    <div className="step-text">{inst.text}</div>
-                    <button type="button" onClick={() => handleRemoveInstruction(idx)} className="remove-btn">×</button>
+                {formData.instructions.length === 0 ? (
+                  <div className="empty-instructions">
+                    <span>📝</span>
+                    <p>No instructions added yet.</p>
                   </div>
-                ))}
+                ) : (
+                  formData.instructions.map((inst, idx) => (
+                    <div key={idx} className="instruction-item">
+                      <div className="instruction-step-number">{inst.step}</div>
+                      <div className="instruction-text">{inst.text}</div>
+                      <button type="button" onClick={() => handleRemoveInstruction(idx)} className="remove-btn" title="Remove">✕</button>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </form>
