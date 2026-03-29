@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { getUserScannedImages } from '../api/adminApi';
 import './UserModal.css';
 
 const UserModal = ({ user, onClose, onWarn, onBan, onSuspend, onRestore, loading }) => {
@@ -7,23 +8,47 @@ const UserModal = ({ user, onClose, onWarn, onBan, onSuspend, onRestore, loading
   const [suspendReason, setSuspendReason] = useState('');
   const [warningReason, setWarningReason] = useState('');
   const [activeTab, setActiveTab] = useState('info');
+  const [scannedImages, setScannedImages] = useState([]);
+  const [scannedImagesLoading, setScannedImagesLoading] = useState(false);
 
   const isBanned = user?.status === 'banned';
   const isSuspended = user?.status === 'suspended';
   const isActive = user?.status === 'active';
   
   // Warning thresholds
-  const WARNING_THRESHOLD_SUSPEND = 3;  // After 3 warnings, can suspend
-  const WARNING_THRESHOLD_BAN = 5;      // After 5 warnings, can ban
+  const WARNING_THRESHOLD_SUSPEND = 3;
+  const WARNING_THRESHOLD_BAN = 5;
   const violationCount = user?.violationCount || 0;
   
   // Check if user has uploaded photos
-  const hasUploadedPhotos = user?.reportedImages?.length > 0 || user?.recipes?.length > 0 || user?.avatar;
+  const hasUploadedPhotos = user?.reportedImages?.length > 0 || user?.recipes?.length > 0 || user?.avatar || scannedImages?.length > 0;
   
   // Determine if suspend/ban actions are available based on warning count
   const canSuspend = violationCount >= WARNING_THRESHOLD_SUSPEND;
   const canBan = violationCount >= WARNING_THRESHOLD_BAN;
   
+  // Define fetchScannedImages with useCallback to stabilize it
+  const fetchScannedImages = useCallback(async () => {
+    if (!user?.id) return;
+    setScannedImagesLoading(true);
+    try {
+      const result = await getUserScannedImages(user.id);
+      setScannedImages(result.scannedImages || []);
+      console.log('📸 Scanned images loaded:', result.scannedImages?.length);
+    } catch (error) {
+      console.error('Failed to fetch scanned images:', error);
+    } finally {
+      setScannedImagesLoading(false);
+    }
+  }, [user?.id]); // ✅ Added dependency
+
+  // Fetch scanned images when user is selected and photos tab is active
+  useEffect(() => {
+    if (user?.id && activeTab === 'photos') {
+      fetchScannedImages();
+    }
+  }, [user?.id, activeTab, fetchScannedImages]); // ✅ Added fetchScannedImages to dependencies
+
   // Get warning level message
   const getWarningMessage = () => {
     if (violationCount === 0) return 'No violations yet';
@@ -115,6 +140,9 @@ const UserModal = ({ user, onClose, onWarn, onBan, onSuspend, onRestore, loading
 
   if (!user) return null;
 
+ // ✅ Correct for Vite
+ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
   return (
     <div className="user-modal-overlay" onClick={onClose}>
       <div className="user-modal" onClick={(e) => e.stopPropagation()}>
@@ -129,7 +157,7 @@ const UserModal = ({ user, onClose, onWarn, onBan, onSuspend, onRestore, loading
             📋 Info
           </button>
           <button className={`tab ${activeTab === 'photos' ? 'active' : ''}`} onClick={() => setActiveTab('photos')}>
-            📸 Photos ({user.reportedImages?.length || 0})
+            📸 Photos ({ (user.reportedImages?.length || 0) + (user.avatar ? 1 : 0) + (user.recipes?.length || 0) + (scannedImages?.length || 0) })
           </button>
           <button className={`tab ${activeTab === 'actions' ? 'active' : ''}`} onClick={() => setActiveTab('actions')}>
             ⚙️ Actions
@@ -178,23 +206,19 @@ const UserModal = ({ user, onClose, onWarn, onBan, onSuspend, onRestore, loading
                 <p><strong>Joined:</strong> {new Date(user.createdAt).toLocaleDateString()}</p>
                 <p><strong>Last Active:</strong> {user.lastActive ? new Date(user.lastActive).toLocaleDateString() : 'N/A'}</p>
                 <p><strong>Saved Recipes:</strong> {user.savedRecipesCount || 0}</p>
+                <p><strong>AI Scans:</strong> {scannedImages?.length || 0}</p>
               </div>
             </div>
           )}
 
-          {/* Photos Tab - Keep as is */}
+          {/* Photos Tab */}
           {activeTab === 'photos' && (
             <div className="photos-tab">
-              {loading ? (
+              {(loading || scannedImagesLoading) ? (
                 <div className="loading">Loading photos...</div>
-              ) : user.reportedImages?.length === 0 && !user.avatar && user.recipes?.length === 0 ? (
-                <div className="no-photos">
-                  <span>📷</span>
-                  <p>No uploaded photos found</p>
-                  <small>User must upload photos before actions are available</small>
-                </div>
               ) : (
                 <div className="photos-grid">
+                  {/* Avatar */}
                   {user.avatar && (
                     <div className="photo-card">
                       <img src={user.avatar} alt="Profile" />
@@ -203,6 +227,8 @@ const UserModal = ({ user, onClose, onWarn, onBan, onSuspend, onRestore, loading
                       </div>
                     </div>
                   )}
+
+                  {/* Recipes */}
                   {user.recipes?.map((recipe, idx) => (
                     recipe.image && (
                       <div key={idx} className="photo-card">
@@ -214,6 +240,45 @@ const UserModal = ({ user, onClose, onWarn, onBan, onSuspend, onRestore, loading
                       </div>
                     )
                   ))}
+
+                  {/* Scanned Images */}
+                  {scannedImages.length > 0 && (
+                    <>
+                      <h4 className="section-subtitle">🤖 AI Scans ({scannedImages.length})</h4>
+                      {scannedImages.map((scan, idx) => (
+                        <div key={idx} className="photo-card scan">
+                          <img 
+                            src={`${API_URL}${scan.url}`} 
+                            alt={`Scan ${idx + 1}`}
+                            onError={(e) => { e.target.src = '/placeholder-image.png'; }}
+                          />
+                          <div className="photo-info">
+                            <span className="photo-type scan-badge">
+                              🤖 AI Detected
+                            </span>
+                            <div className="ingredients-list">
+                              {scan.ingredients?.slice(0, 5).map((ing, i) => (
+                                <span key={i} className="ingredient-tag">
+                                  {ing.name} ({ing.confidence}%)
+                                </span>
+                              ))}
+                              {scan.ingredients?.length > 5 && (
+                                <span className="ingredient-tag">+{scan.ingredients.length - 5} more</span>
+                              )}
+                            </div>
+                            <span className="photo-date">
+                              {new Date(scan.scannedAt).toLocaleDateString()}
+                            </span>
+                            <span className="photo-filename">
+                              {scan.originalFilename || `scan_${idx + 1}`}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+
+                  {/* Reported Images */}
                   {user.reportedImages?.map((img, idx) => (
                     <div key={idx} className="photo-card reported">
                       <img src={img.url} alt={`Reported ${idx + 1}`} />
@@ -223,6 +288,15 @@ const UserModal = ({ user, onClose, onWarn, onBan, onSuspend, onRestore, loading
                       </div>
                     </div>
                   ))}
+
+                  {/* Empty state */}
+                  {!user.avatar && (!user.recipes || user.recipes.length === 0) && scannedImages.length === 0 && (!user.reportedImages || user.reportedImages.length === 0) && (
+                    <div className="no-photos">
+                      <span>📷</span>
+                      <p>No uploaded photos found</p>
+                      <small>User must upload photos before actions are available</small>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

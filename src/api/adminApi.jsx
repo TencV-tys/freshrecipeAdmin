@@ -89,6 +89,13 @@ export const getUserDetails = async (userId) => {
   return response.data;
 };
 
+// ✅ NEW: Get user's scanned images
+export const getUserScannedImages = async (userId) => {
+  console.log('📸 getUserScannedImages called with userId:', userId);
+  const response = await api.get(`/admin/users/${userId}/scans`);
+  return response.data;
+};
+
 export const banUser = async (userId, data) => {
   const response = await api.put(`/admin/users/${userId}/ban`, data);
   return response.data;

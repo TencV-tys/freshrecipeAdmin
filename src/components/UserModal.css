@@ -557,8 +557,141 @@ button:disabled {
   }
   50% {
     opacity: 0.7;
-  }
+  } 
   100% {
     opacity: 1;
+  }
+}
+/* Add these styles to your UserModal.css */
+
+/* Scanned Images Section */
+.section-subtitle {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 20px 0 12px;
+  color: #1e293b;
+  width: 100%;
+  border-left: 3px solid #ff6b6b;
+  padding-left: 12px;
+}
+
+.photo-card.scan {
+  border: 2px solid #4ecdc4;
+  background: #f0fffe;
+  transition: all 0.2s;
+}
+
+.photo-card.scan:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(78, 205, 196, 0.2);
+}
+
+.scan-badge {
+  background: #4ecdc4;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ingredients-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.ingredient-tag {
+  background: #e8f0fe;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  color: #2c3e50;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.ingredient-tag:hover {
+  background: #4ecdc4;
+  color: white;
+  cursor: default;
+}
+
+.photo-filename {
+  font-size: 9px;
+  color: #aaa;
+  margin-top: 4px;
+  display: block;
+  word-break: break-all;
+}
+
+/* Photo Card Enhancements */
+.photo-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.photo-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.photo-info {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.photo-type {
+  font-size: 11px;
+  background: #e2e8f0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: #475569;
+  display: inline-block;
+}
+
+.photo-date {
+  font-size: 10px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+/* Reported image enhancement */
+.photo-card.reported {
+  border: 2px solid #ff6b6b;
+  background: #fff0f0;
+}
+
+.reported-badge {
+  background: #ff6b6b !important;
+  color: white !important;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .section-subtitle {
+    color: #e2e8f0;
+  }
+  
+  .ingredient-tag {
+    background: rgba(78, 205, 196, 0.2);
+    color: #4ecdc4;
+  }
+  
+  .ingredient-tag:hover {
+    background: #4ecdc4;
+    color: #1a1a2e;
+  }
+  
+  .photo-type {
+    background: #334155;
+    color: #94a3b8;
+  }
+  
+  .photo-date {
+    color: #64748b;
   }
 }

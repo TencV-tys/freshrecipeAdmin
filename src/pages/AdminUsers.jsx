@@ -284,6 +284,7 @@ const AdminUsers = () => {
                   <th>Email</th>
                   <th>Status</th>
                   <th>Saved</th>
+                  <th>Scans</th>
                   <th>Violations</th>
                   <th>Last Active</th>
                   <th>Actions</th>
@@ -315,6 +316,11 @@ const AdminUsers = () => {
                         </span>
                       </td>
                       <td onClick={() => handleViewUser(user)}>{user.savedRecipesCount || 0}</td>
+                      <td onClick={() => handleViewUser(user)}>
+                        <span className="scans-count">
+                          📸 {user.scannedImagesCount || 0}
+                        </span>
+                      </td>
                       <td onClick={() => handleViewUser(user)}>{user.violationCount || 0}</td>
                       <td onClick={() => handleViewUser(user)}>{user.lastActive ? new Date(user.lastActive).toLocaleDateString() : 'N/A'}</td>
                       <td>
@@ -347,4 +353,4 @@ const AdminUsers = () => {
   );
 };
 
-export default AdminUsers;
+export default AdminUsers; 

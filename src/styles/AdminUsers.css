@@ -229,4 +229,41 @@
 .clear-filter-btn:hover {
   background: var(--border-color);
   color: var(--text-primary);
+} 
+/* Add these styles to your AdminUsers.css */
+
+/* Scans Count Badge */
+.scans-count {
+  display: inline-block;
+  background: #e8f0fe;
+  color: #4ecdc4;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.scans-count:hover {
+  background: #4ecdc4;
+  color: white;
+  cursor: help;
+}
+
+/* Make the scans column stand out */
+.users-table td:nth-child(5) {
+  text-align: center;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .scans-count {
+    background: rgba(78, 205, 196, 0.2);
+    color: #4ecdc4;
+  }
+  
+  .scans-count:hover {
+    background: #4ecdc4;
+    color: #1a1a2e;
+  }
 }
