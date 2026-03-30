@@ -6,7 +6,7 @@ const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
-});
+}); 
 
 api.interceptors.response.use( 
   (response) => response,
@@ -32,7 +32,7 @@ api.interceptors.response.use(
 
 // In adminApi.jsx - make sure adminLogin returns the user object properly
 export const adminLogin = async (email, password) => {
-  const response = await api.post('/auth/login', { email, password });
+  const response = await api.post('/auth/admin/login', { email, password });
   // Check if user is admin
   if (response.data.user.role !== 'admin') {
     throw new Error('Unauthorized - Admin access only');
@@ -40,11 +40,11 @@ export const adminLogin = async (email, password) => {
   const userData = response.data.user;
   localStorage.setItem('adminUser', JSON.stringify(userData));
   return userData;
-};
+}; 
 
 export const adminLogout = async () => {
   try {
-    await api.post('/auth/logout');
+    await api.post('/auth/admin/logout');
   } catch (error) {
     console.error('Logout error:', error);
   } finally {
