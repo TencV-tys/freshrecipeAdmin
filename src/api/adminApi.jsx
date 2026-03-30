@@ -8,7 +8,7 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-api.interceptors.response.use(
+api.interceptors.response.use( 
   (response) => response,
   (error) => {
     // Handle 401 Unauthorized - token expired or invalid
@@ -60,7 +60,7 @@ export const checkAdminAuth = async () => {
       return response.data;
     }
     return null;
-  } catch (error) {
+  } catch (error) { 
     console.error('Auth check failed:', error);
     return null;
   }
@@ -197,7 +197,7 @@ export const updateRecipe = async (id, recipeData, imageFile) => {
   const response = await api.put(`/admin/recipes/${id}`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
-  return response.data;
+  return response.data; 
 };
 
 export const deleteRecipe = async (id) => {

@@ -13,32 +13,30 @@ const AdminUsers = () => {
   const [modalLoading, setModalLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Helper function to get user ID from different possible field names
   const getUserId = (user) => {
     if (!user) return null;
     return user._id || user.id || user.userId || user.ID || null;
   };
 
   const fetchUsers = useCallback(async () => {
-    console.log('📖 Fetching users with filter:', filter);
+    console.log('📖 [AdminUsers] fetchUsers called with filter:', filter);
     setLoading(true);
     try {
       const data = await getUsers(filter);
-      console.log('✅ RAW Users fetched:', data);
-      if (data && data.length > 0) {
-        console.log('📊 First user object keys:', Object.keys(data[0]));
-        console.log('📊 First user full object:', data[0]);
-        console.log('🔑 ID field value:', data[0]?.id);
-        console.log('🔑 _id field value:', data[0]?._id);
-        console.log('🔑 userId field value:', data[0]?.userId);
-      }
+      console.log('✅ [AdminUsers] RAW Users fetched:', data);
+      
+      // 🔍 DEBUG: Log scannedImagesCount for each user
+      console.log('🔍 [AdminUsers] scannedImagesCount values:');
+      data.forEach(user => {
+        console.log(`   User: ${user.username}, scannedImagesCount: ${user.scannedImagesCount}, type: ${typeof user.scannedImagesCount}`);
+      });
       
       // Filter out admin users
       const regularUsers = data.filter(user => user.role !== 'admin');
-      console.log('📊 Regular users (non-admin):', regularUsers.length);
+      console.log('📊 [AdminUsers] Regular users (non-admin):', regularUsers.length);
       setUsers(regularUsers);
     } catch (error) {
-      console.error('❌ Failed to fetch users:', error);
+      console.error('❌ [AdminUsers] Failed to fetch users:', error);
     } finally {
       setLoading(false);
     }
@@ -50,12 +48,11 @@ const AdminUsers = () => {
 
   const handleViewUser = async (user) => {
     const userId = getUserId(user);
-    console.log('👁️ Viewing user details for:', user.username, 'ID:', userId);
+    console.log('👁️ [AdminUsers] Viewing user details for:', user.username, 'ID:', userId);
     
     if (!userId) {
-      console.error('❌ No user ID found for:', user);
-      console.log('Available fields:', Object.keys(user));
-      alert('Error: Unable to get user ID. Please check console for details.');
+      console.error('❌ [AdminUsers] No user ID found for:', user);
+      alert('Error: Unable to get user ID');
       return;
     }
     
@@ -63,13 +60,14 @@ const AdminUsers = () => {
     setShowModal(true);
     setModalLoading(true);
     try {
-      console.log('📡 Fetching user details from API for ID:', userId);
+      console.log('📡 [AdminUsers] Fetching user details from API for ID:', userId);
       const details = await getUserDetails(userId);
-      console.log('✅ User details fetched:', details);
+      console.log('✅ [AdminUsers] User details fetched:', details);
+      console.log('🔍 [AdminUsers] User details - scannedImages count:', details.scannedImages?.length);
+      console.log('🔍 [AdminUsers] User details - scannedImagesCount field:', details.scannedImagesCount);
       setSelectedUser(details);
     } catch (error) {
-      console.error('❌ Failed to fetch user details:', error);
-      console.error('Error details:', error.response?.data);
+      console.error('❌ [AdminUsers] Failed to fetch user details:', error);
       alert(error.response?.data?.message || 'Failed to load user details');
     } finally {
       setModalLoading(false);
@@ -83,7 +81,6 @@ const AdminUsers = () => {
       alert('Error: User ID not found');
       return;
     }
-    
     console.log('⚠️ Warning user:', selectedUser?.username, 'ID:', userId, 'Reason:', reason);
     setActionLoading(true);
     try {
@@ -94,7 +91,6 @@ const AdminUsers = () => {
       alert('Warning sent successfully');
     } catch (error) {
       console.error('❌ Failed to warn user:', error);
-      console.error('Error details:', error.response?.data);
       alert(error.response?.data?.message || 'Failed to send warning');
     } finally {
       setActionLoading(false);
@@ -108,7 +104,6 @@ const AdminUsers = () => {
       alert('Error: User ID not found');
       return;
     }
-    
     console.log('🚫 Banning user:', selectedUser?.username, 'ID:', userId, 'Reason:', reason);
     setActionLoading(true);
     try {
@@ -119,7 +114,6 @@ const AdminUsers = () => {
       alert('User banned successfully');
     } catch (error) {
       console.error('❌ Failed to ban user:', error);
-      console.error('Error details:', error.response?.data);
       alert(error.response?.data?.message || 'Failed to ban user');
     } finally {
       setActionLoading(false);
@@ -133,7 +127,6 @@ const AdminUsers = () => {
       alert('Error: User ID not found');
       return;
     }
-    
     console.log('⏰ Suspending user:', selectedUser?.username, 'ID:', userId, 'Days:', days, 'Reason:', reason);
     setActionLoading(true);
     try {
@@ -144,7 +137,6 @@ const AdminUsers = () => {
       alert('User suspended successfully');
     } catch (error) {
       console.error('❌ Failed to suspend user:', error);
-      console.error('Error details:', error.response?.data);
       alert(error.response?.data?.message || 'Failed to suspend user');
     } finally {
       setActionLoading(false);
@@ -158,7 +150,6 @@ const AdminUsers = () => {
       alert('Error: User ID not found');
       return;
     }
-    
     console.log('🔄 Restoring user:', selectedUser?.username, 'ID:', userId);
     setActionLoading(true);
     try {
@@ -169,7 +160,6 @@ const AdminUsers = () => {
       alert('User restored successfully');
     } catch (error) {
       console.error('❌ Failed to restore user:', error);
-      console.error('Error details:', error.response?.data);
       alert(error.response?.data?.message || 'Failed to restore user');
     } finally {
       setActionLoading(false);
@@ -183,7 +173,6 @@ const AdminUsers = () => {
       alert('Error: User ID not found');
       return;
     }
-    
     console.log('🗑️ Deleting user:', selectedUser?.username, 'ID:', userId);
     setActionLoading(true);
     try {
@@ -194,14 +183,12 @@ const AdminUsers = () => {
       alert('User deleted successfully');
     } catch (error) {
       console.error('❌ Failed to delete user:', error);
-      console.error('Error details:', error.response?.data);
       alert(error.response?.data?.message || 'Failed to delete user');
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Get filter display name for empty state
   const getFilterDisplayName = () => {
     switch(filter) {
       case 'active': return 'active';
@@ -216,7 +203,6 @@ const AdminUsers = () => {
     user.email?.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Check if there are no users after filtering
   const hasNoUsers = filteredUsers.length === 0;
   const hasSearchTerm = search.length > 0;
 
@@ -254,18 +240,14 @@ const AdminUsers = () => {
                 <div className="empty-icon">🔍</div>
                 <h3>No users found</h3>
                 <p>No users match "{search}"</p>
-                <button className="clear-search-btn" onClick={() => setSearch('')}>
-                  Clear Search
-                </button>
+                <button className="clear-search-btn" onClick={() => setSearch('')}>Clear Search</button>
               </>
             ) : filter !== 'all' ? (
               <>
                 <div className="empty-icon">👥</div>
                 <h3>No {getFilterDisplayName()} users</h3>
                 <p>There are no {getFilterDisplayName()} users at the moment.</p>
-                <button className="clear-filter-btn" onClick={() => setFilter('all')}>
-                  View All Users
-                </button>
+                <button className="clear-filter-btn" onClick={() => setFilter('all')}>View All Users</button>
               </>
             ) : (
               <>
@@ -293,6 +275,7 @@ const AdminUsers = () => {
               <tbody>
                 {filteredUsers.map(user => {
                   const userId = getUserId(user);
+                  console.log(`🔍 [AdminUsers] Rendering user: ${user.username}, scans: ${user.scannedImagesCount}`);
                   return (
                     <tr key={userId || Math.random()} className="clickable-row">
                       <td onClick={() => handleViewUser(user)}>
@@ -353,4 +336,4 @@ const AdminUsers = () => {
   );
 };
 
-export default AdminUsers; 
+export default AdminUsers;
