@@ -1,53 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import styles from '../styles/AdminLogin.module.css';
 
-// ========================
-// TOAST NOTIFICATION
-// ========================
-const Toast = ({ type, message, onClose }) => {
-  useEffect(() => {
-    const t = setTimeout(onClose, 3500);
-    return () => clearTimeout(t);
-  }, [onClose]);
-
-  return (
-    <div className={`${styles.toast} ${styles[`toast${type}`]}`}>
-      <span className={styles.toastIcon}>
-        {type === 'Success' ? '✅' : '❌'}
-      </span>
-      <span className={styles.toastMessage}>{message}</span>
-      <button className={styles.toastClose} onClick={onClose}>×</button>
-    </div>
-  );
-};
-
-// ========================
-// MAIN COMPONENT
-// ========================
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState(null); // { type: 'Success'|'Error', message }
+
   const { login } = useAuth();
   const navigate = useNavigate();
-
-  const showToast = (type, message) => setToast({ type, message });
-  const closeToast = () => setToast(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(email, password);
-      showToast('Success', 'Logged in successfully! Redirecting…');
-      setTimeout(() => navigate('/admin/dashboard'), 1500);
+      await login(email, password); // throws error if login fails
+      alert('✅ Logged in successfully! Redirecting…');
+      navigate('/admin/dashboard');
     } catch (err) {
-      const msg = err.response?.data?.message || 'Invalid email or password.';
-      showToast('Error', msg);
+      const msg = err.response?.data?.message || err.message || 'Invalid email or password';
+      console.error('Login error:', msg);
+      alert(`❌ Login failed: ${msg}`);
     } finally {
       setLoading(false);
     }
@@ -55,8 +30,6 @@ const AdminLogin = () => {
 
   return (
     <div className={styles.container}>
-      {toast && <Toast type={toast.type} message={toast.message} onClose={closeToast} />}
-
       <div className={styles.card}>
         <div className={styles.header}>
           <div className={styles.logo}>🍳</div>
@@ -65,7 +38,6 @@ const AdminLogin = () => {
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          {/* Email */}
           <div className={styles.inputGroup}>
             <label>Email Address</label>
             <div className={styles.inputWrap}>
@@ -79,14 +51,12 @@ const AdminLogin = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@freshrecipe.com"
                 required
                 autoComplete="email"
               />
             </div>
           </div>
 
-          {/* Password */}
           <div className={styles.inputGroup}>
             <label>Password</label>
             <div className={styles.inputWrap}>
@@ -107,33 +77,16 @@ const AdminLogin = () => {
               <button
                 type="button"
                 className={styles.eyeBtn}
-                onClick={() => setShowPassword((v) => !v)}
+                onClick={() => setShowPassword(v => !v)}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? (
-                  // Eye-off
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-                    <line x1="1" y1="1" x2="23" y2="23"/>
-                  </svg>
-                ) : (
-                  // Eye
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                  </svg>
-                )}
+                {showPassword ? '🙈' : '👁️'}
               </button>
             </div>
           </div>
 
           <button type="submit" className={styles.submitBtn} disabled={loading}>
-            {loading ? (
-              <span className={styles.spinner} />
-            ) : (
-              'Sign In'
-            )}
+            {loading ? 'Loading…' : 'Sign In'}
           </button>
         </form>
       </div>

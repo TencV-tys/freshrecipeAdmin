@@ -34,18 +34,16 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  const login = async (email, password) => {
-    try {
-      const response = await adminLogin(email, password);
-      setUser(response);
-      return { success: true, user: response };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error.message || 'Login failed' 
-      };
-    }
-  };
+ const login = async (email, password) => {
+  try {
+    const response = await adminLogin(email, password);
+    setUser(response);
+    return response; // just return user
+  } catch (error) {
+    console.error('AuthContext login error:', error);
+    throw error; // 🚨 throw error so AdminLogin catch block works
+  }
+};
 
   const logout = async () => {
     try {
